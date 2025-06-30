@@ -12,3 +12,5 @@ target/
 *.iml
 *.ipr
 .idea
+
+.env
