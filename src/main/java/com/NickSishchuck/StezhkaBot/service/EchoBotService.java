@@ -50,7 +50,7 @@ public class EchoBotService implements LongPollingUpdateConsumer {
         if (messageText.equals("/start")) {
             responseText = "Hello " + firstName + "! I'm an echo bot. Send me any message and I'll echo it back!";
         } else {
-            responseText = "Echo: " + messageText;
+            responseText = "Echo " + messageText;
         }
 
         SendMessage sendMessage = SendMessage.builder()
