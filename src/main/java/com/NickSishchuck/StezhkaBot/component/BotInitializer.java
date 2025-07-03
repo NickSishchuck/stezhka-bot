@@ -2,7 +2,8 @@ package com.NickSishchuck.StezhkaBot.component;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
-import com.NickSishchuck.StezhkaBot.service.EchoBotService;
+//import com.NickSishchuck.StezhkaBot.service.EchoBotService;
+import com.NickSishchuck.StezhkaBot.service.StezhkaBotService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,14 +19,14 @@ public class BotInitializer {
     private static final Logger logger = LoggerFactory.getLogger(BotInitializer.class);
 
     private final String botToken;
-    private final EchoBotService echoBotService;
+    private final StezhkaBotService stezhkaBotService;
     private TelegramBotsLongPollingApplication botsApplication;
     private TelegramClient telegramClient;
 
     @Autowired
-    public BotInitializer(String botToken, EchoBotService echoBotService) {
+    public BotInitializer(String botToken, StezhkaBotService stezhkaBotService) {
         this.botToken = botToken;
-        this.echoBotService = echoBotService;
+        this.stezhkaBotService = stezhkaBotService;
     }
 
     @PostConstruct
@@ -37,14 +38,14 @@ public class BotInitializer {
             telegramClient = new OkHttpTelegramClient(botToken);
 
             // Set the client in the bot service
-            echoBotService.setTelegramClient(telegramClient);
+            stezhkaBotService.setTelegramClient(telegramClient);
 
             // Create and start the long polling application
             botsApplication = new TelegramBotsLongPollingApplication();
-            botsApplication.registerBot(botToken, echoBotService);
+            botsApplication.registerBot(botToken, stezhkaBotService);
 
             logger.info("Telegram bot started successfully!");
-            logger.info("Bot username: {}", echoBotService.getBotUsername());
+            logger.info("Bot username: {}", stezhkaBotService.getBotUsername());
 
         } catch (TelegramApiException e) {
             logger.error("Failed to initialize Telegram bot", e);
