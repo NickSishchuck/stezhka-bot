@@ -94,7 +94,7 @@ public class ProgramsMenuHandler implements MenuHandler {
 
     private void showAge15to18Programs(long chatId) {
         var keyboard = new MenuBuilder()
-                .addButton("🎯 Підготовка до НМТ", "program_zno")
+                .addButton("🎯 Підготовка до НМТ", "program_nmt")
                 .addRow()
                 .addButton("⬅️ Назад", "programs_main")
                 .build();
@@ -136,7 +136,7 @@ public class ProgramsMenuHandler implements MenuHandler {
             case "preschool" -> "age_4_6";
             case "primary", "english", "financial", "creative" -> "age_6_10";
             case "teen_psychologist" -> "age_11_15";
-            case "zno" -> "age_15_18";
+            case "nmt" -> "age_15_18";
             case "psychologist", "speech_therapist" -> "age_specialists";
             default -> "programs_main";
         };
