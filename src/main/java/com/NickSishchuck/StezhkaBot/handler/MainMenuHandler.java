@@ -60,6 +60,6 @@ public class MainMenuHandler implements MenuHandler {
                 .addButton("📢 Новини та акції", "news_show")
                 .build();
 
-        messageSender.sendMessage(chatId, menuTexts.getWelcomeMessage(), keyboard);
+        messageSender.sendMessage(chatId, menuTexts.getMainMenuMessage(), keyboard);
     }
 }
