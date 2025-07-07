@@ -30,4 +30,20 @@ public class MessageSender {
             logger.error("Failed to send message to chat {}", chatId, e);
         }
     }
+
+    public void sendPlainMessage(long chatId, String text, InlineKeyboardMarkup keyboard) {
+        SendMessage message = SendMessage.builder()
+                .chatId(chatId)
+                .text(text)
+                .replyMarkup(keyboard)
+                // No parseMode - sends as plain text, no MarkdownV2 parsing
+                .build();
+
+        try {
+            telegramClient.execute(message);
+            logger.info("Plain message sent successfully to chat {}", chatId);
+        } catch (TelegramApiException e) {
+            logger.error("Failed to send plain message to chat {}", chatId, e);
+        }
+    }
 }

@@ -1,5 +1,8 @@
 package com.NickSishchuck.StezhkaBot.handler;
 
+import com.NickSishchuck.StezhkaBot.service.StezhkaBotService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.NickSishchuck.StezhkaBot.service.TextContentService;
 import com.NickSishchuck.StezhkaBot.utils.MenuBuilder;
 import com.NickSishchuck.StezhkaBot.utils.MessageSender;
@@ -13,6 +16,7 @@ import java.util.Map;
 @Component
 public class AdminHandler implements MenuHandler {
 
+    private static final Logger logger = LoggerFactory.getLogger(StezhkaBotService.class);
     private final TextContentService textContentService;
     private TelegramClient telegramClient;
     private MessageSender messageSender;
@@ -72,9 +76,10 @@ public class AdminHandler implements MenuHandler {
                 .addButton("⬅️ Back to Main", "main")
                 .build();
 
-        String message = "🔧 *Admin Panel*\n\nSelect an option:";
-        messageSender.sendMessage(chatId, message, keyboard);
+        String message = "🔧 Admin Panel\n\nSelect an option:";
+        messageSender.sendPlainMessage(chatId, message, keyboard);
     }
+
 
     private void showContentManagement(long chatId) {
         var keyboard = new MenuBuilder()
@@ -101,19 +106,22 @@ public class AdminHandler implements MenuHandler {
                 .addButton("⬅️ Back", "admin_content")
                 .build();
 
-        // Escape the text for safe display in MarkdownV2
-        String escapedText = escapeMarkdownV2(currentText);
-
         String message = String.format(
-                "📝 *Editing: %s*\n\n" +
-                        "*Current text:*\n" +
-                        "```\n%s\n```\n\n" +
-                        "💡 To update this text, send a message in the format:\n" +
-                        "`/update_text %s YOUR_NEW_TEXT_HERE`",
-                escapeMarkdownV2(textKey), escapedText, escapeMarkdownV2(textKey)
+                "📝 Editing: %s\n\n" +
+                        "Current text:\n" +
+                        "═══════════════════\n" +
+                        "%s\n" +
+                        "═══════════════════\n\n" +
+                        "💡 To update, send a message like this:\n\n" +
+                        "/update_text %s\n" +
+                        "Your new text content here\n" +
+                        "(can be multiple lines)\n\n" +
+                        "Or on one line:\n" +
+                        "/update_text %s Your new text here",
+                textKey, currentText, textKey, textKey
         );
 
-        messageSender.sendMessage(chatId, message, keyboard);
+        messageSender.sendPlainMessage(chatId, message, keyboard);
     }
 
     /**
@@ -165,31 +173,26 @@ public class AdminHandler implements MenuHandler {
     private void listAllTexts(long chatId) {
         Map<String, String> allTexts = textContentService.getAllTexts();
 
-        StringBuilder message = new StringBuilder("📋 *All Text Entries:*\n\n");
+        StringBuilder message = new StringBuilder("📋 All Text Entries:\n\n");
 
         allTexts.entrySet().stream()
-                .limit(10) // Limit to prevent message being too long
+                .limit(10)
                 .forEach(entry -> {
                     String preview = entry.getValue().length() > 50
                             ? entry.getValue().substring(0, 50) + "..."
                             : entry.getValue();
-
-                    // Escape both key and preview for safe display
-                    String escapedKey = escapeMarkdownV2(entry.getKey());
-                    String escapedPreview = escapeMarkdownV2(preview);
-
-                    message.append(String.format("• *%s*: %s\n", escapedKey, escapedPreview));
+                    message.append(String.format("• %s: %s\n", entry.getKey(), preview));
                 });
 
         if (allTexts.size() > 10) {
-            message.append(String.format("\n\\.\\.\\. and %d more entries", allTexts.size() - 10));
+            message.append(String.format("\n... and %d more entries", allTexts.size() - 10));
         }
 
         var keyboard = new MenuBuilder()
                 .addButton("⬅️ Back", "admin_main")
                 .build();
 
-        messageSender.sendMessage(chatId, message.toString(), keyboard);
+        messageSender.sendPlainMessage(chatId, message.toString(), keyboard);
     }
 
     // Helper method to check if user is admin
@@ -221,23 +224,35 @@ public class AdminHandler implements MenuHandler {
             return false;
         }
 
-        String content = messageText.substring("/update_text ".length());
-        String[] parts = content.split(" ", 2);
+        String content = messageText.substring("/update_text ".length()).trim();
+
+        // Split on first whitespace (space, newline, tab, etc.)
+        String[] parts = content.split("\\s+", 2);
 
         if (parts.length < 2) {
-            messageSender.sendMessage(chatId,
-                    "❌ Invalid format. Use: `/update_text TEXT_KEY new content here`",
+            messageSender.sendPlainMessage(chatId,
+                    "❌ Invalid format. Use:\n/update_text TEXT_KEY new content here\n\nOr:\n/update_text TEXT_KEY\nnew content here",
                     new MenuBuilder().addButton("⬅️ Back", "admin_content").build());
             return true;
         }
 
-        String textKey = parts[0];
-        String newValue = parts[1];
+        String textKey = parts[0].trim();
+        String newValue = parts[1].trim();
+
+        if (textKey.isEmpty() || newValue.isEmpty()) {
+            messageSender.sendPlainMessage(chatId,
+                    "❌ Both key and value are required.\n\nFormat: /update_text TEXT_KEY new content here",
+                    new MenuBuilder().addButton("⬅️ Back", "admin_content").build());
+            return true;
+        }
+
+        // Log what we're actually updating
+        logger.info("Admin {} updating text key '{}' with value: '{}'", chatId, textKey, newValue);
 
         boolean success = textContentService.updateText(textKey, newValue);
 
         String responseMessage = success
-                ? "✅ Text updated successfully!"
+                ? String.format("✅ Text updated successfully!\n\nKey: %s\nNew content length: %d characters", textKey, newValue.length())
                 : "❌ Failed to update text. Please try again.";
 
         var keyboard = new MenuBuilder()
@@ -245,7 +260,7 @@ public class AdminHandler implements MenuHandler {
                 .addButton("⬅️ Back to Admin", "admin_main")
                 .build();
 
-        messageSender.sendMessage(chatId, responseMessage, keyboard);
+        messageSender.sendPlainMessage(chatId, responseMessage, keyboard);
         return true;
     }
 }
