@@ -56,6 +56,13 @@ public class AdminHandler implements MenuHandler {
         switch (callbackData) {
             case "/admin", "admin_main" -> showAdminMenu(chatId);
             case "admin_content" -> showContentManagement(chatId);
+            case "admin_programs" -> showProgramsManagement(chatId);
+            case "admin_age_groups" -> showAgeGroupsManagement(chatId);
+            case "admin_age_4_6" -> showAge4to6Management(chatId);
+            case "admin_age_6_10" -> showAge6to10Management(chatId);
+            case "admin_age_11_15" -> showAge11to15Management(chatId);
+            case "admin_age_15_18" -> showAge15to18Management(chatId);
+            case "admin_specialists" -> showSpecialistsManagement(chatId);
             case "admin_refresh" -> refreshContent(chatId);
             case "admin_list_all" -> listAllTexts(chatId);
             default -> {
@@ -70,16 +77,17 @@ public class AdminHandler implements MenuHandler {
     private void showAdminMenu(long chatId) {
         var keyboard = new MenuBuilder()
                 .addButton("📝 Content Management", "admin_content")
-                .addButton("🔄 Refresh Cache", "admin_refresh")
+                .addButton("🎓 Programs Management", "admin_programs")
                 .addRow()
+                .addButton("🔄 Refresh Cache", "admin_refresh")
                 .addButton("📋 List All Texts", "admin_list_all")
+                .addRow()
                 .addButton("⬅️ Back to Main", "main")
                 .build();
 
         String message = "🔧 Admin Panel\n\nSelect an option:";
         messageSender.sendPlainMessage(chatId, message, keyboard);
     }
-
 
     private void showContentManagement(long chatId) {
         var keyboard = new MenuBuilder()
@@ -92,6 +100,8 @@ public class AdminHandler implements MenuHandler {
                 .addButton("📝 Edit Contacts", "text_edit_CONTACTS_TEXT")
                 .addButton("📝 Edit News", "text_edit_NEWS_TEXT")
                 .addRow()
+                .addButton("📝 Edit Age Groups", "admin_age_groups")
+                .addRow()
                 .addButton("⬅️ Back", "admin_main")
                 .build();
 
@@ -99,11 +109,105 @@ public class AdminHandler implements MenuHandler {
         messageSender.sendMessage(chatId, message, keyboard);
     }
 
+    private void showProgramsManagement(long chatId) {
+        var keyboard = new MenuBuilder()
+                .addButton("👶 Age 4-6 Programs", "admin_age_4_6")
+                .addButton("🎒 Age 6-10 Programs", "admin_age_6_10")
+                .addRow()
+                .addButton("🧠 Age 11-15 Programs", "admin_age_11_15")
+                .addButton("🎯 Age 15-18 Programs", "admin_age_15_18")
+                .addRow()
+                .addButton("👨‍⚕️ Specialists Programs", "admin_specialists")
+                .addRow()
+                .addButton("⬅️ Back", "admin_main")
+                .build();
+
+        String message = "🎓 *Programs Management*\n\nSelect age group to manage:";
+        messageSender.sendMessage(chatId, message, keyboard);
+    }
+
+    private void showAge4to6Management(long chatId) {
+        var keyboard = new MenuBuilder()
+                .addButton("📚 Edit Preschool Program", "text_edit_PROGRAM_PRESCHOOL_DETAILS")
+                .addRow()
+                .addButton("⬅️ Back", "admin_programs")
+                .build();
+
+        String message = "👶 *Age 4-6 Programs*\n\nSelect program to edit:";
+        messageSender.sendMessage(chatId, message, keyboard);
+    }
+
+    private void showAge6to10Management(long chatId) {
+        var keyboard = new MenuBuilder()
+                .addButton("🏫 Edit Primary School", "text_edit_PROGRAM_PRIMARY_DETAILS")
+                .addButton("🇬🇧 Edit English Program", "text_edit_PROGRAM_ENGLISH_DETAILS")
+                .addRow()
+                .addButton("💰 Edit Financial Literacy", "text_edit_PROGRAM_FINANCIAL_DETAILS")
+                .addButton("🎨 Edit Creative Programs", "text_edit_PROGRAM_CREATIVE_DETAILS")
+                .addRow()
+                .addButton("⬅️ Back", "admin_programs")
+                .build();
+
+        String message = "🎒 *Age 6-10 Programs*\n\nSelect program to edit:";
+        messageSender.sendMessage(chatId, message, keyboard);
+    }
+
+    private void showAge11to15Management(long chatId) {
+        var keyboard = new MenuBuilder()
+                .addButton("🧠 Edit Teen Psychology", "text_edit_PROGRAM_TEEN_PSYCHOLOGY_DETAILS")
+                .addRow()
+                .addButton("⬅️ Back", "admin_programs")
+                .build();
+
+        String message = "🧠 *Age 11-15 Programs*\n\nSelect program to edit:";
+        messageSender.sendMessage(chatId, message, keyboard);
+    }
+
+    private void showAge15to18Management(long chatId) {
+        var keyboard = new MenuBuilder()
+                .addButton("🎯 Edit NMT Preparation", "text_edit_PROGRAM_NMT_DETAILS")
+                .addRow()
+                .addButton("⬅️ Back", "admin_programs")
+                .build();
+
+        String message = "🎯 *Age 15-18 Programs*\n\nSelect program to edit:";
+        messageSender.sendMessage(chatId, message, keyboard);
+    }
+
+    private void showSpecialistsManagement(long chatId) {
+        var keyboard = new MenuBuilder()
+                .addButton("👩‍⚕️ Edit Psychologist", "text_edit_PROGRAM_PSYCHOLOGIST_DETAILS")
+                .addButton("🗣️ Edit Speech Therapist", "text_edit_PROGRAM_SPEECH_THERAPIST_DETAILS")
+                .addRow()
+                .addButton("⬅️ Back", "admin_programs")
+                .build();
+
+        String message = "👨‍⚕️ *Specialists Programs*\n\nSelect program to edit:";
+        messageSender.sendMessage(chatId, message, keyboard);
+    }
+
+    private void showAgeGroupsManagement(long chatId) {
+        var keyboard = new MenuBuilder()
+                .addButton("👶 Edit Age 4-6 Info", "text_edit_AGE_4_6_MESSAGE")
+                .addButton("🎒 Edit Age 6-10 Info", "text_edit_AGE_6_10_MESSAGE")
+                .addRow()
+                .addButton("🧠 Edit Age 11-15 Info", "text_edit_AGE_11_15_MESSAGE")
+                .addButton("🎯 Edit Age 15-18 Info", "text_edit_AGE_15_18_MESSAGE")
+                .addRow()
+                .addButton("👨‍⚕️ Edit Specialists Info", "text_edit_SPECIALISTS_MESSAGE")
+                .addRow()
+                .addButton("⬅️ Back", "admin_content")
+                .build();
+
+        String message = "📝 *Age Groups Information*\n\nSelect age group info to edit:";
+        messageSender.sendMessage(chatId, message, keyboard);
+    }
+
     private void showTextEditor(long chatId, String textKey) {
         String currentText = textContentService.getText(textKey);
 
         var keyboard = new MenuBuilder()
-                .addButton("⬅️ Back", "admin_content")
+                .addButton("⬅️ Back", getBackButtonForTextKey(textKey))
                 .build();
 
         String message = String.format(
@@ -115,39 +219,29 @@ public class AdminHandler implements MenuHandler {
                         "💡 To update, send a message like this:\n\n" +
                         "/update_text %s\n" +
                         "Your new text content here\n",
-                textKey, currentText, textKey, textKey
+                textKey, currentText, textKey
         );
 
         messageSender.sendPlainMessage(chatId, message, keyboard);
     }
 
-    /**
-     * Escape MarkdownV2 special characters for display in admin messages
-     */
-    private String escapeMarkdownV2(String text) {
-        if (text == null) return "";
-
-        // Escape special MarkdownV2 characters
-        return text.replace("\\", "\\\\")
-                .replace("_", "\\_")
-                .replace("*", "\\*")
-                .replace("[", "\\[")
-                .replace("]", "\\]")
-                .replace("(", "\\(")
-                .replace(")", "\\)")
-                .replace("~", "\\~")
-                .replace("`", "\\`")
-                .replace(">", "\\>")
-                .replace("#", "\\#")
-                .replace("+", "\\+")
-                .replace("-", "\\-")
-                .replace("=", "\\=")
-                .replace("|", "\\|")
-                .replace("{", "\\{")
-                .replace("}", "\\}")
-                .replace(".", "\\.")
-                .replace("!", "\\!");
+    private String getBackButtonForTextKey(String textKey) {
+        // Return appropriate back button based on text key
+        if (textKey.startsWith("PROGRAM_")) {
+            if (textKey.contains("PRESCHOOL")) return "admin_age_4_6";
+            if (textKey.contains("PRIMARY") || textKey.contains("ENGLISH") ||
+                    textKey.contains("FINANCIAL") || textKey.contains("CREATIVE")) return "admin_age_6_10";
+            if (textKey.contains("TEEN")) return "admin_age_11_15";
+            if (textKey.contains("NMT")) return "admin_age_15_18";
+            if (textKey.contains("PSYCHOLOGIST") || textKey.contains("SPEECH")) return "admin_specialists";
+            return "admin_programs";
+        }
+        if (textKey.startsWith("AGE_") || textKey.equals("SPECIALISTS_MESSAGE")) {
+            return "admin_age_groups";
+        }
+        return "admin_content";
     }
+
 
     private void refreshContent(long chatId) {
         try {
@@ -253,7 +347,7 @@ public class AdminHandler implements MenuHandler {
                 : "❌ Failed to update text. Please try again.";
 
         var keyboard = new MenuBuilder()
-                .addButton("📝 Edit Another", "admin_content")
+                .addButton("📝 Edit Another", getBackButtonForTextKey(textKey))
                 .addButton("⬅️ Back to Admin", "admin_main")
                 .build();
 
