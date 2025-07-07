@@ -22,6 +22,9 @@ public class TextContentService {
     private final Map<String, String> textCache = new ConcurrentHashMap<>();
 
     @Autowired
+    private AdminNotificationService notificationService;
+
+    @Autowired
     public TextContentService(TextContentRepository textContentRepository) {
         this.textContentRepository = textContentRepository;
     }
