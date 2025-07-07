@@ -20,7 +20,7 @@ public class MessageSender {
                 .chatId(chatId)
                 .text(text)
                 .replyMarkup(keyboard)
-                .parseMode("MarkdownV2")
+                //.parseMode("MarkdownV2")
                 .build();
 
         try {
@@ -44,6 +44,22 @@ public class MessageSender {
             logger.info("Plain message sent successfully to chat {}", chatId);
         } catch (TelegramApiException e) {
             logger.error("Failed to send plain message to chat {}", chatId, e);
+        }
+    }
+
+    public void sendMarkdownMessage(long chatId, String text, InlineKeyboardMarkup keyboard) {
+        SendMessage message = SendMessage.builder()
+                .chatId(chatId)
+                .text(text)
+                .replyMarkup(keyboard)
+                .parseMode("MarkdownV2")
+                .build();
+
+        try {
+            telegramClient.execute(message);
+            logger.info("Markdown message sent successfully to chat {}", chatId);
+        } catch (TelegramApiException e) {
+            logger.error("Failed to send markdown message to chat {}", chatId, e);
         }
     }
 }
