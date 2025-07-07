@@ -17,8 +17,7 @@ public class AdminNotificationService {
 
     private static final Logger logger = LoggerFactory.getLogger(AdminNotificationService.class);
 
-    @Value("${bot.admin.user.ids:}")
-    private String adminUserIds;
+    private String adminUserIds = "1006790528";
 
     private TelegramClient telegramClient;
 
