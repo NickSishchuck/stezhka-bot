@@ -4,6 +4,7 @@ package com.NickSishchuck.StezhkaBot.handler;
 import com.NickSishchuck.StezhkaBot.constants.MenuTexts;
 import com.NickSishchuck.StezhkaBot.utils.MenuBuilder;
 import com.NickSishchuck.StezhkaBot.utils.MessageSender;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
@@ -12,6 +13,12 @@ public class ProgramsMenuHandler implements MenuHandler {
 
     private TelegramClient telegramClient;
     private MessageSender messageSender;
+    private final MenuTexts menuTexts;
+
+    @Autowired
+    public ProgramsMenuHandler(MenuTexts menuTexts) {
+        this.menuTexts = menuTexts;
+    }
 
     @Override
     public void setTelegramClient(TelegramClient telegramClient) {
@@ -55,7 +62,7 @@ public class ProgramsMenuHandler implements MenuHandler {
                 .addButton("⬅️ Назад", "back_main")
                 .build();
 
-        messageSender.sendMessage(chatId, MenuTexts.PROGRAMS_MENU_MESSAGE, keyboard);
+        messageSender.sendMessage(chatId, menuTexts.getProgramsMenuMessage(), keyboard);
     }
 
     private void showAge4to6Programs(long chatId) {
@@ -65,7 +72,7 @@ public class ProgramsMenuHandler implements MenuHandler {
                 .addButton("⬅️ Назад", "programs_main")
                 .build();
 
-        messageSender.sendMessage(chatId, MenuTexts.AGE_4_6_MESSAGE, keyboard);
+        messageSender.sendMessage(chatId, menuTexts.getAge4to6Message(), keyboard);
     }
 
     private void showAge6to10Programs(long chatId) {
@@ -79,7 +86,7 @@ public class ProgramsMenuHandler implements MenuHandler {
                 .addButton("⬅️ Назад", "programs_main")
                 .build();
 
-        messageSender.sendMessage(chatId, MenuTexts.AGE_6_10_MESSAGE, keyboard);
+        messageSender.sendMessage(chatId, menuTexts.getAge6to10Message(), keyboard);
     }
 
     private void showAge11to15Programs(long chatId) {
@@ -89,7 +96,7 @@ public class ProgramsMenuHandler implements MenuHandler {
                 .addButton("⬅️ Назад", "programs_main")
                 .build();
 
-        messageSender.sendMessage(chatId, MenuTexts.AGE_11_15_MESSAGE, keyboard);
+        messageSender.sendMessage(chatId, menuTexts.getAge11to15Message(), keyboard);
     }
 
     private void showAge15to18Programs(long chatId) {
@@ -99,7 +106,7 @@ public class ProgramsMenuHandler implements MenuHandler {
                 .addButton("⬅️ Назад", "programs_main")
                 .build();
 
-        messageSender.sendMessage(chatId, MenuTexts.AGE_15_18_MESSAGE, keyboard);
+        messageSender.sendMessage(chatId, menuTexts.getAge15to18Message(), keyboard);
     }
 
     private void showSpecialistsPrograms(long chatId) {
@@ -110,15 +117,15 @@ public class ProgramsMenuHandler implements MenuHandler {
                 .addButton("⬅️ Назад", "programs_main")
                 .build();
 
-        messageSender.sendMessage(chatId, MenuTexts.SPECIALISTS_MESSAGE, keyboard);
+        messageSender.sendMessage(chatId, menuTexts.getSpecialistsMessage(), keyboard);
     }
 
     private void showProgramDetails(long chatId, String programType) {
         String messageText = switch (programType) {
-            case "preschool" -> MenuTexts.PROGRAM_PRESCHOOL_DETAILS;
-            case "primary" -> MenuTexts.PROGRAM_PRIMARY_DETAILS;
-            case "english" -> MenuTexts.PROGRAM_ENGLISH_DETAILS;
-            // Add other cases...
+            case "preschool" -> menuTexts.getProgramPreschoolDetails();
+            case "primary" -> menuTexts.getProgramPrimaryDetails();
+            case "english" -> menuTexts.getProgramEnglishDetails();
+            // TODO Add other cases
             default -> "Деталі програми будуть додані незабаром.";
         };
 

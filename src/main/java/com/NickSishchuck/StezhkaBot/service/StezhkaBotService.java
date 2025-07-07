@@ -1,5 +1,6 @@
 package com.NickSishchuck.StezhkaBot.service;
 
+import com.NickSishchuck.StezhkaBot.handler.AdminHandler;
 import com.NickSishchuck.StezhkaBot.handler.MenuHandlerRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,20 +17,23 @@ import java.util.List;
 public class StezhkaBotService implements LongPollingUpdateConsumer {
 
     private static final Logger logger = LoggerFactory.getLogger(StezhkaBotService.class);
+    private final AdminHandler adminHandler;
 
     private final String botUsername;
     private final MenuHandlerRegistry handlerRegistry;
     private TelegramClient telegramClient;
 
     @Autowired
-    public StezhkaBotService(String botUsername, MenuHandlerRegistry handlerRegistry) {
+    public StezhkaBotService(String botUsername, MenuHandlerRegistry handlerRegistry, AdminHandler adminHandler) {
         this.botUsername = botUsername;
         this.handlerRegistry = handlerRegistry;
+        this.adminHandler = adminHandler;
     }
 
     public void setTelegramClient(TelegramClient telegramClient) {
         this.telegramClient = telegramClient;
         handlerRegistry.setTelegramClient(telegramClient);
+        adminHandler.setTelegramClient(telegramClient);
     }
 
     @Override
@@ -57,8 +61,17 @@ public class StezhkaBotService implements LongPollingUpdateConsumer {
         // Handle /start and any other text messages
         if (messageText.equals("/start")) {
             handlerRegistry.handle(chatId, "start");
+        }
+        if (messageText.startsWith("/admin")) {
+            adminHandler.handle(chatId, "/admin");
+            return;
+        }
+
+        if (messageText.startsWith("/update_text ")) {
+            boolean handled = adminHandler.handleTextUpdate(chatId, messageText);
+            if (handled) return;
         } else {
-            // For now, just redirect unknown messages to main menu
+            // TODO For now, just redirect unknown messages to main menu
             handlerRegistry.handle(chatId, "main");
         }
     }
@@ -70,6 +83,10 @@ public class StezhkaBotService implements LongPollingUpdateConsumer {
 
         logger.info("Received callback from {}: {}", firstName, callbackData);
 
+        if (adminHandler.canHandle(callbackData)) {
+            adminHandler.handle(chatId, callbackData);
+            return;
+        }
         // Answer callback query to remove loading indicator
         try {
             telegramClient.execute(org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery.builder()

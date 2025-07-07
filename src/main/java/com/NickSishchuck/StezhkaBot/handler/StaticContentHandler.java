@@ -4,6 +4,7 @@ package com.NickSishchuck.StezhkaBot.handler;
 import com.NickSishchuck.StezhkaBot.constants.MenuTexts;
 import com.NickSishchuck.StezhkaBot.utils.MenuBuilder;
 import com.NickSishchuck.StezhkaBot.utils.MessageSender;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
@@ -12,6 +13,12 @@ public class StaticContentHandler implements MenuHandler {
 
     private TelegramClient telegramClient;
     private MessageSender messageSender;
+    private final MenuTexts menuTexts;
+
+    @Autowired
+    public StaticContentHandler(MenuTexts menuTexts) {
+        this.menuTexts = menuTexts;
+    }
 
     @Override
     public void setTelegramClient(TelegramClient telegramClient) {
@@ -40,7 +47,7 @@ public class StaticContentHandler implements MenuHandler {
                 .addButton("⬅️ Назад", "back_main")
                 .build();
 
-        messageSender.sendMessage(chatId, MenuTexts.FAQ_TEXT, keyboard);
+        messageSender.sendMessage(chatId, menuTexts.getFaqText(), keyboard);
     }
 
     private void showContacts(long chatId) {
@@ -48,7 +55,7 @@ public class StaticContentHandler implements MenuHandler {
                 .addButton("⬅️ Назад", "back_main")
                 .build();
 
-        messageSender.sendMessage(chatId, MenuTexts.CONTACTS_TEXT, keyboard);
+        messageSender.sendMessage(chatId, menuTexts.getContactsText(), keyboard);
     }
 
     private void showNews(long chatId) {
@@ -56,6 +63,6 @@ public class StaticContentHandler implements MenuHandler {
                 .addButton("⬅️ Назад", "back_main")
                 .build();
 
-        messageSender.sendMessage(chatId, MenuTexts.NEWS_TEXT, keyboard);
+        messageSender.sendMessage(chatId, menuTexts.getNewsText(), keyboard);
     }
 }

@@ -3,6 +3,7 @@ package com.NickSishchuck.StezhkaBot.handler;
 import com.NickSishchuck.StezhkaBot.constants.MenuTexts;
 import com.NickSishchuck.StezhkaBot.utils.MenuBuilder;
 import com.NickSishchuck.StezhkaBot.utils.MessageSender;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
@@ -11,6 +12,13 @@ public class MainMenuHandler implements MenuHandler {
 
     private TelegramClient telegramClient;
     private MessageSender messageSender;
+
+    private final MenuTexts menuTexts;
+
+    @Autowired
+    public MainMenuHandler(MenuTexts menuTexts) {
+        this.menuTexts = menuTexts;
+    }
 
     @Override
     public void setTelegramClient(TelegramClient telegramClient) {
@@ -38,7 +46,7 @@ public class MainMenuHandler implements MenuHandler {
                 .addButton("🚀 Почати", "main")
                 .build();
 
-        messageSender.sendMessage(chatId, MenuTexts.WELCOME_MESSAGE, keyboard);
+        messageSender.sendMessage(chatId, menuTexts.getWelcomeMessage(), keyboard);
     }
 
     private void showMainMenu(long chatId) {
@@ -52,6 +60,6 @@ public class MainMenuHandler implements MenuHandler {
                 .addButton("📢 Новини та акції", "news_show")
                 .build();
 
-        messageSender.sendMessage(chatId, MenuTexts.MAIN_MENU_MESSAGE, keyboard);
+        messageSender.sendMessage(chatId, menuTexts.getWelcomeMessage(), keyboard);
     }
 }
