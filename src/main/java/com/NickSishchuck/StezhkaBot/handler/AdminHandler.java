@@ -17,7 +17,7 @@ public class AdminHandler implements MenuHandler {
     private TelegramClient telegramClient;
     private MessageSender messageSender;
 
-    // List of admin user IDs (can be moved to database later)
+    // List of admin user IDs TODO move to db layer
     @Value("${bot.admin.user.ids:}")
     private String adminUserIds;
 
@@ -101,16 +101,47 @@ public class AdminHandler implements MenuHandler {
                 .addButton("⬅️ Back", "admin_content")
                 .build();
 
+        // Escape the text for safe display in MarkdownV2
+        String escapedText = escapeMarkdownV2(currentText);
+
         String message = String.format(
                 "📝 *Editing: %s*\n\n" +
                         "*Current text:*\n" +
                         "```\n%s\n```\n\n" +
                         "💡 To update this text, send a message in the format:\n" +
                         "`/update_text %s YOUR_NEW_TEXT_HERE`",
-                textKey, currentText, textKey
+                escapeMarkdownV2(textKey), escapedText, escapeMarkdownV2(textKey)
         );
 
         messageSender.sendMessage(chatId, message, keyboard);
+    }
+
+    /**
+     * Escape MarkdownV2 special characters for display in admin messages
+     */
+    private String escapeMarkdownV2(String text) {
+        if (text == null) return "";
+
+        // Escape special MarkdownV2 characters
+        return text.replace("\\", "\\\\")
+                .replace("_", "\\_")
+                .replace("*", "\\*")
+                .replace("[", "\\[")
+                .replace("]", "\\]")
+                .replace("(", "\\(")
+                .replace(")", "\\)")
+                .replace("~", "\\~")
+                .replace("`", "\\`")
+                .replace(">", "\\>")
+                .replace("#", "\\#")
+                .replace("+", "\\+")
+                .replace("-", "\\-")
+                .replace("=", "\\=")
+                .replace("|", "\\|")
+                .replace("{", "\\{")
+                .replace("}", "\\}")
+                .replace(".", "\\.")
+                .replace("!", "\\!");
     }
 
     private void refreshContent(long chatId) {
@@ -142,11 +173,16 @@ public class AdminHandler implements MenuHandler {
                     String preview = entry.getValue().length() > 50
                             ? entry.getValue().substring(0, 50) + "..."
                             : entry.getValue();
-                    message.append(String.format("• *%s*: %s\n", entry.getKey(), preview));
+
+                    // Escape both key and preview for safe display
+                    String escapedKey = escapeMarkdownV2(entry.getKey());
+                    String escapedPreview = escapeMarkdownV2(preview);
+
+                    message.append(String.format("• *%s*: %s\n", escapedKey, escapedPreview));
                 });
 
         if (allTexts.size() > 10) {
-            message.append(String.format("\n... and %d more entries", allTexts.size() - 10));
+            message.append(String.format("\n\\.\\.\\. and %d more entries", allTexts.size() - 10));
         }
 
         var keyboard = new MenuBuilder()
