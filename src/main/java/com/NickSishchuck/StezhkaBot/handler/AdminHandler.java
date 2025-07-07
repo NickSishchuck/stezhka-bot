@@ -114,10 +114,7 @@ public class AdminHandler implements MenuHandler {
                         "═══════════════════\n\n" +
                         "💡 To update, send a message like this:\n\n" +
                         "/update_text %s\n" +
-                        "Your new text content here\n" +
-                        "(can be multiple lines)\n\n" +
-                        "Or on one line:\n" +
-                        "/update_text %s Your new text here",
+                        "Your new text content here\n",
                 textKey, currentText, textKey, textKey
         );
 
