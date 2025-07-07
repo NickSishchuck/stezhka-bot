@@ -1,36 +1,31 @@
 package com.NickSishchuck.StezhkaBot.config;
 
-import io.github.cdimascio.dotenv.Dotenv;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class BotConfig {
 
-    private final Dotenv dotenv;
+    @Value("${BOT_TOKEN}")
+    private String botToken;
 
-    public BotConfig() {
-        this.dotenv = Dotenv.configure()
-                .directory("./")
-                .ignoreIfMissing()
-                .load();
-    }
+    @Value("${BOT_USERNAME}")
+    private String botUsername;
 
     @Bean
     public String botToken() {
-        String token = dotenv.get("BOT_TOKEN");
-        if (token == null || token.isEmpty()) {
+        if (botToken == null || botToken.isEmpty()) {
             throw new IllegalStateException("BOT_TOKEN is not set in .env file");
         }
-        return token;
+        return botToken;
     }
 
     @Bean
     public String botUsername() {
-        String username = dotenv.get("BOT_USERNAME");
-        if (username == null || username.isEmpty()) {
+        if (botUsername == null || botUsername.isEmpty()) {
             throw new IllegalStateException("BOT_USERNAME is not set in .env file");
         }
-        return username;
+        return botUsername;
     }
 }
