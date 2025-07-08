@@ -61,7 +61,9 @@ public class StezhkaBotService implements LongPollingUpdateConsumer {
         // Handle /start and any other text messages
         if (messageText.equals("/start")) {
             handlerRegistry.handle(chatId, "start");
+            return; // Important: return here to prevent falling through to the else block
         }
+
         if (messageText.startsWith("/admin")) {
             adminHandler.handle(chatId, "/admin");
             return;
