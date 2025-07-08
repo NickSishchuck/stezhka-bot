@@ -68,7 +68,7 @@ public class MainMenuHandler implements MenuHandler {
     private void showMainMenu(long chatId) {
         var keyboard = new MenuBuilder()
                 .addButton("🎓 Навчальні програми", "programs_main")
-                .addButton("📞 Записатися на консультацію", "consultations_main")
+                //.addButton("📞 Записатися на консультацію", "consultations_main")TODO
                 .addRow()
                 .addButton("❓ Часті запитання", "faq_show")
                 .addButton("📋 Контакти та адреса", "contacts_show")
