@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 @Component
-public class ProgramsMenuHandler implements MenuHandler {
+public abstract class ProgramsMenuHandler implements MenuHandler {
 
     private TelegramClient telegramClient;
     private MessageSender messageSender;
@@ -42,12 +42,29 @@ public class ProgramsMenuHandler implements MenuHandler {
             case "age_11_15" -> showAge11to15Programs(chatId);
             case "age_15_18" -> showAge15to18Programs(chatId);
             case "age_specialists" -> showSpecialistsPrograms(chatId);
+
+            // Age 4-6 programs
             case "program_preschool" -> showProgramDetails(chatId, "preschool");
+
+            // Age 6-10 programs
             case "program_primary" -> showProgramDetails(chatId, "primary");
             case "program_english" -> showProgramDetails(chatId, "english");
-            // Add other program cases...
+            case "program_financial" -> showProgramDetails(chatId, "financial");
+            case "program_creative" -> showProgramDetails(chatId, "creative");
+
+            // Age 11-15 programs
+            case "program_teen_psychologist" -> showProgramDetails(chatId, "teen_psychology");
+
+            // Age 15-18 programs
+            case "program_nmt" -> showProgramDetails(chatId, "nmt");
+
+            // Specialists programs
+            case "program_psychologist" -> showProgramDetails(chatId, "psychologist");
+            case "program_speech_therapist" -> showProgramDetails(chatId, "speech_therapist");
         }
     }
+
+
 
     private void showProgramsMenu(long chatId) {
         var keyboard = new MenuBuilder()
@@ -125,7 +142,12 @@ public class ProgramsMenuHandler implements MenuHandler {
             case "preschool" -> menuTexts.getProgramPreschoolDetails();
             case "primary" -> menuTexts.getProgramPrimaryDetails();
             case "english" -> menuTexts.getProgramEnglishDetails();
-            // TODO Add other cases
+            case "financial" -> menuTexts.getProgramFinancialDetails();
+            case "creative" -> menuTexts.getProgramCreativeDetails();
+            case "teen_psychology" -> menuTexts.getProgramTeenPsychologyDetails();
+            case "nmt" -> menuTexts.getProgramNmtDetails();
+            case "psychologist" -> menuTexts.getProgramPsychologistDetails();
+            case "speech_therapist" -> menuTexts.getProgramSpeechTherapistDetails();
             default -> "Деталі програми будуть додані незабаром.";
         };
 
@@ -142,10 +164,12 @@ public class ProgramsMenuHandler implements MenuHandler {
         return switch (programType) {
             case "preschool" -> "age_4_6";
             case "primary", "english", "financial", "creative" -> "age_6_10";
-            case "teen_psychologist" -> "age_11_15";
+            case "teen_psychology" -> "age_11_15";
             case "nmt" -> "age_15_18";
             case "psychologist", "speech_therapist" -> "age_specialists";
             default -> "programs_main";
         };
     }
+
+
 }

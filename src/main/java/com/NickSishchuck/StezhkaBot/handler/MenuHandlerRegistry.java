@@ -22,6 +22,7 @@ public class MenuHandlerRegistry {
         handlers.forEach(handler -> handler.setTelegramClient(telegramClient));
     }
 
+    // For text messages (send new message)
     public void handle(long chatId, String callbackData) {
         handlers.stream()
                 .filter(handler -> handler.canHandle(callbackData))
@@ -34,6 +35,23 @@ public class MenuHandlerRegistry {
                                     .filter(handler -> handler.canHandle("main"))
                                     .findFirst()
                                     .ifPresent(handler -> handler.handle(chatId, "main"));
+                        }
+                );
+    }
+
+    // For callback queries (edit existing message)
+    public void handle(long chatId, int messageId, String callbackData) {
+        handlers.stream()
+                .filter(handler -> handler.canHandle(callbackData))
+                .findFirst()
+                .ifPresentOrElse(
+                        handler -> handler.handle(chatId, messageId, callbackData),
+                        () -> {
+                            // Fallback to main menu if no handler found
+                            handlers.stream()
+                                    .filter(handler -> handler.canHandle("main"))
+                                    .findFirst()
+                                    .ifPresent(handler -> handler.handle(chatId, messageId, "main"));
                         }
                 );
     }

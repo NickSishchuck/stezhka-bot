@@ -41,6 +41,14 @@ public class MainMenuHandler implements MenuHandler {
         }
     }
 
+    @Override
+    public void handle(long chatId, int messageId, String callbackData) {
+        switch (callbackData) {
+            case "start" -> editWelcomeMessage(chatId, messageId);
+            case "main", "back_main" -> editMainMenu(chatId, messageId);
+        }
+    }
+
     private void showWelcomeMessage(long chatId) {
         var keyboard = new MenuBuilder()
                 .addButton("🚀 Почати", "main")
@@ -49,10 +57,18 @@ public class MainMenuHandler implements MenuHandler {
         messageSender.sendMessage(chatId, menuTexts.getWelcomeMessage(), keyboard);
     }
 
+    private void editWelcomeMessage(long chatId, int messageId) {
+        var keyboard = new MenuBuilder()
+                .addButton("🚀 Почати", "main")
+                .build();
+
+        messageSender.editMessage(chatId, messageId, menuTexts.getWelcomeMessage(), keyboard);
+    }
+
     private void showMainMenu(long chatId) {
         var keyboard = new MenuBuilder()
                 .addButton("🎓 Навчальні програми", "programs_main")
-                .addButton("📞 Записатися на консультацію NO HANDLER", "consultations_main")
+                .addButton("📞 Записатися на консультацію", "consultations_main")
                 .addRow()
                 .addButton("❓ Часті запитання", "faq_show")
                 .addButton("📋 Контакти та адреса", "contacts_show")
@@ -61,5 +77,19 @@ public class MainMenuHandler implements MenuHandler {
                 .build();
 
         messageSender.sendMessage(chatId, menuTexts.getMainMenuMessage(), keyboard);
+    }
+
+    private void editMainMenu(long chatId, int messageId) {
+        var keyboard = new MenuBuilder()
+                .addButton("🎓 Навчальні програми", "programs_main")
+                .addButton("📞 Записатися на консультацію", "consultations_main")
+                .addRow()
+                .addButton("❓ Часті запитання", "faq_show")
+                .addButton("📋 Контакти та адреса", "contacts_show")
+                .addRow()
+                .addButton("📢 Новини та акції", "news_show")
+                .build();
+
+        messageSender.editMessage(chatId, messageId, menuTexts.getMainMenuMessage(), keyboard);
     }
 }

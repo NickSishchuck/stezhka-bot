@@ -74,6 +74,36 @@ public class AdminHandler implements MenuHandler {
         }
     }
 
+    @Override
+    public void handle(long chatId, int messageId, String callbackData) {
+        // Check if user is admin
+        if (!isAdmin(chatId)) {
+            messageSender.editMessage(chatId, messageId, "❌ Access denied. Admin privileges required.",
+                    new MenuBuilder().addButton("⬅️ Back", "main").build());
+            return;
+        }
+
+        switch (callbackData) {
+            case "/admin", "admin_main" -> editAdminMenu(chatId, messageId);
+            case "admin_content" -> editContentManagement(chatId, messageId);
+            case "admin_programs" -> editProgramsManagement(chatId, messageId);
+            case "admin_age_groups" -> editAgeGroupsManagement(chatId, messageId);
+            case "admin_age_4_6" -> editAge4to6Management(chatId, messageId);
+            case "admin_age_6_10" -> editAge6to10Management(chatId, messageId);
+            case "admin_age_11_15" -> editAge11to15Management(chatId, messageId);
+            case "admin_age_15_18" -> editAge15to18Management(chatId, messageId);
+            case "admin_specialists" -> editSpecialistsManagement(chatId, messageId);
+            case "admin_refresh" -> refreshContent(chatId, messageId);
+            case "admin_list_all" -> listAllTexts(chatId);
+            default -> {
+                if (callbackData.startsWith("text_edit_")) {
+                    String key = callbackData.substring("text_edit_".length());
+                    editTextEditor(chatId, messageId, key);
+                }
+            }
+        }
+    }
+
     private void showAdminMenu(long chatId) {
         var keyboard = new MenuBuilder()
                 .addButton("📝 Content Management", "admin_content")
@@ -87,6 +117,21 @@ public class AdminHandler implements MenuHandler {
 
         String message = "🔧 Admin Panel\n\nSelect an option:";
         messageSender.sendPlainMessage(chatId, message, keyboard);
+    }
+
+    private void editAdminMenu(long chatId, int messageId) {
+        var keyboard = new MenuBuilder()
+                .addButton("📝 Content Management", "admin_content")
+                .addButton("🎓 Programs Management", "admin_programs")
+                .addRow()
+                .addButton("🔄 Refresh Cache", "admin_refresh")
+                .addButton("📋 List All Texts", "admin_list_all")
+                .addRow()
+                .addButton("⬅️ Back to Main", "main")
+                .build();
+
+        String message = "🔧 Admin Panel\n\nSelect an option:";
+        messageSender.editPlainMessage(chatId, messageId, message, keyboard);
     }
 
     private void showContentManagement(long chatId) {
@@ -242,6 +287,188 @@ public class AdminHandler implements MenuHandler {
         return "admin_content";
     }
 
+    /**
+     * Escape MarkdownV2 special characters for display in admin messages
+     */
+    private String escapeMarkdownV2(String text) {
+        if (text == null) return "";
+
+        // Escape special MarkdownV2 characters
+        return text.replace("\\", "\\\\")
+                .replace("_", "\\_")
+                .replace("*", "\\*")
+                .replace("[", "\\[")
+                .replace("]", "\\]")
+                .replace("(", "\\(")
+                .replace(")", "\\)")
+                .replace("~", "\\~")
+                .replace("`", "\\`")
+                .replace(">", "\\>")
+                .replace("#", "\\#")
+                .replace("+", "\\+")
+                .replace("-", "\\-")
+                .replace("=", "\\=")
+                .replace("|", "\\|")
+                .replace("{", "\\{")
+                .replace("}", "\\}")
+                .replace(".", "\\.")
+                .replace("!", "\\!");
+    }
+
+    // Edit methods for all admin panels
+    private void editContentManagement(long chatId, int messageId) {
+        var keyboard = new MenuBuilder()
+                .addButton("📝 Edit Welcome Message", "text_edit_WELCOME_MESSAGE")
+                .addButton("📝 Edit Main Menu", "text_edit_MAIN_MENU_MESSAGE")
+                .addRow()
+                .addButton("📝 Edit Programs Menu", "text_edit_PROGRAMS_MENU_MESSAGE")
+                .addButton("📝 Edit FAQ", "text_edit_FAQ_TEXT")
+                .addRow()
+                .addButton("📝 Edit Contacts", "text_edit_CONTACTS_TEXT")
+                .addButton("📝 Edit News", "text_edit_NEWS_TEXT")
+                .addRow()
+                .addButton("📝 Edit Age Groups", "admin_age_groups")
+                .addRow()
+                .addButton("⬅️ Back", "admin_main")
+                .build();
+
+        String message = "📝 *Content Management*\n\nSelect text to edit:";
+        messageSender.editMessage(chatId, messageId, message, keyboard);
+    }
+
+    private void editProgramsManagement(long chatId, int messageId) {
+        var keyboard = new MenuBuilder()
+                .addButton("👶 Age 4-6 Programs", "admin_age_4_6")
+                .addButton("🎒 Age 6-10 Programs", "admin_age_6_10")
+                .addRow()
+                .addButton("🧠 Age 11-15 Programs", "admin_age_11_15")
+                .addButton("🎯 Age 15-18 Programs", "admin_age_15_18")
+                .addRow()
+                .addButton("👨‍⚕️ Specialists Programs", "admin_specialists")
+                .addRow()
+                .addButton("⬅️ Back", "admin_main")
+                .build();
+
+        String message = "🎓 *Programs Management*\n\nSelect age group to manage:";
+        messageSender.editMessage(chatId, messageId, message, keyboard);
+    }
+
+    private void editAge4to6Management(long chatId, int messageId) {
+        var keyboard = new MenuBuilder()
+                .addButton("📚 Edit Preschool Program", "text_edit_PROGRAM_PRESCHOOL_DETAILS")
+                .addRow()
+                .addButton("⬅️ Back", "admin_programs")
+                .build();
+
+        String message = "👶 *Age 4-6 Programs*\n\nSelect program to edit:";
+        messageSender.editMessage(chatId, messageId, message, keyboard);
+    }
+
+    private void editAge6to10Management(long chatId, int messageId) {
+        var keyboard = new MenuBuilder()
+                .addButton("🏫 Edit Primary School", "text_edit_PROGRAM_PRIMARY_DETAILS")
+                .addButton("🇬🇧 Edit English Program", "text_edit_PROGRAM_ENGLISH_DETAILS")
+                .addRow()
+                .addButton("💰 Edit Financial Literacy", "text_edit_PROGRAM_FINANCIAL_DETAILS")
+                .addButton("🎨 Edit Creative Programs", "text_edit_PROGRAM_CREATIVE_DETAILS")
+                .addRow()
+                .addButton("⬅️ Back", "admin_programs")
+                .build();
+
+        String message = "🎒 *Age 6-10 Programs*\n\nSelect program to edit:";
+        messageSender.editMessage(chatId, messageId, message, keyboard);
+    }
+
+    private void editAge11to15Management(long chatId, int messageId) {
+        var keyboard = new MenuBuilder()
+                .addButton("🧠 Edit Teen Psychology", "text_edit_PROGRAM_TEEN_PSYCHOLOGY_DETAILS")
+                .addRow()
+                .addButton("⬅️ Back", "admin_programs")
+                .build();
+
+        String message = "🧠 *Age 11-15 Programs*\n\nSelect program to edit:";
+        messageSender.editMessage(chatId, messageId, message, keyboard);
+    }
+
+    private void editAge15to18Management(long chatId, int messageId) {
+        var keyboard = new MenuBuilder()
+                .addButton("🎯 Edit NMT Preparation", "text_edit_PROGRAM_NMT_DETAILS")
+                .addRow()
+                .addButton("⬅️ Back", "admin_programs")
+                .build();
+
+        String message = "🎯 *Age 15-18 Programs*\n\nSelect program to edit:";
+        messageSender.editMessage(chatId, messageId, message, keyboard);
+    }
+
+    private void editSpecialistsManagement(long chatId, int messageId) {
+        var keyboard = new MenuBuilder()
+                .addButton("👩‍⚕️ Edit Psychologist", "text_edit_PROGRAM_PSYCHOLOGIST_DETAILS")
+                .addButton("🗣️ Edit Speech Therapist", "text_edit_PROGRAM_SPEECH_THERAPIST_DETAILS")
+                .addRow()
+                .addButton("⬅️ Back", "admin_programs")
+                .build();
+
+        String message = "👨‍⚕️ *Specialists Programs*\n\nSelect program to edit:";
+        messageSender.editMessage(chatId, messageId, message, keyboard);
+    }
+
+    private void editAgeGroupsManagement(long chatId, int messageId) {
+        var keyboard = new MenuBuilder()
+                .addButton("👶 Edit Age 4-6 Info", "text_edit_AGE_4_6_MESSAGE")
+                .addButton("🎒 Edit Age 6-10 Info", "text_edit_AGE_6_10_MESSAGE")
+                .addRow()
+                .addButton("🧠 Edit Age 11-15 Info", "text_edit_AGE_11_15_MESSAGE")
+                .addButton("🎯 Edit Age 15-18 Info", "text_edit_AGE_15_18_MESSAGE")
+                .addRow()
+                .addButton("👨‍⚕️ Edit Specialists Info", "text_edit_SPECIALISTS_MESSAGE")
+                .addRow()
+                .addButton("⬅️ Back", "admin_content")
+                .build();
+
+        String message = "📝 *Age Groups Information*\n\nSelect age group info to edit:";
+        messageSender.editMessage(chatId, messageId, message, keyboard);
+    }
+
+    private void editTextEditor(long chatId, int messageId, String textKey) {
+        String currentText = textContentService.getText(textKey);
+
+        var keyboard = new MenuBuilder()
+                .addButton("⬅️ Back", getBackButtonForTextKey(textKey))
+                .build();
+
+        String message = String.format(
+                "📝 Editing: %s\n\n" +
+                        "Current text:\n" +
+                        "═══════════════════\n" +
+                        "%s\n" +
+                        "═══════════════════\n\n" +
+                        "💡 To update, send a message like this:\n\n" +
+                        "/update_text %s\n" +
+                        "Your new text content here\n",
+                textKey, currentText, textKey
+        );
+
+        messageSender.editPlainMessage(chatId, messageId, message, keyboard);
+    }
+
+    private void refreshContent(long chatId, int messageId) {
+        try {
+            textContentService.refreshCache();
+
+            var keyboard = new MenuBuilder()
+                    .addButton("⬅️ Back", "admin_main")
+                    .build();
+
+            messageSender.editMessage(chatId, messageId, "✅ Content cache refreshed successfully!", keyboard);
+        } catch (Exception e) {
+            var keyboard = new MenuBuilder()
+                    .addButton("⬅️ Back", "admin_main")
+                    .build();
+
+            messageSender.editMessage(chatId, messageId, "❌ Failed to refresh cache: " + e.getMessage(), keyboard);
+        }
+    }
 
     private void refreshContent(long chatId) {
         try {
@@ -285,6 +512,7 @@ public class AdminHandler implements MenuHandler {
 
         messageSender.sendPlainMessage(chatId, message.toString(), keyboard);
     }
+
 
     // Helper method to check if user is admin
     private boolean isAdmin(long userId) {

@@ -1,4 +1,3 @@
-
 package com.NickSishchuck.StezhkaBot.handler;
 
 import com.NickSishchuck.StezhkaBot.constants.MenuTexts;
@@ -42,12 +41,29 @@ public class StaticContentHandler implements MenuHandler {
         }
     }
 
+    @Override
+    public void handle(long chatId, int messageId, String callbackData) {
+        switch (callbackData) {
+            case "faq_show" -> editFAQ(chatId, messageId);
+            case "contacts_show" -> editContacts(chatId, messageId);
+            case "news_show" -> editNews(chatId, messageId);
+        }
+    }
+
     private void showFAQ(long chatId) {
         var keyboard = new MenuBuilder()
                 .addButton("⬅️ Назад", "back_main")
                 .build();
 
         messageSender.sendMessage(chatId, menuTexts.getFaqText(), keyboard);
+    }
+
+    private void editFAQ(long chatId, int messageId) {
+        var keyboard = new MenuBuilder()
+                .addButton("⬅️ Назад", "back_main")
+                .build();
+
+        messageSender.editMessage(chatId, messageId, menuTexts.getFaqText(), keyboard);
     }
 
     private void showContacts(long chatId) {
@@ -58,11 +74,27 @@ public class StaticContentHandler implements MenuHandler {
         messageSender.sendMessage(chatId, menuTexts.getContactsText(), keyboard);
     }
 
+    private void editContacts(long chatId, int messageId) {
+        var keyboard = new MenuBuilder()
+                .addButton("⬅️ Назад", "back_main")
+                .build();
+
+        messageSender.editMessage(chatId, messageId, menuTexts.getContactsText(), keyboard);
+    }
+
     private void showNews(long chatId) {
         var keyboard = new MenuBuilder()
                 .addButton("⬅️ Назад", "back_main")
                 .build();
 
         messageSender.sendMessage(chatId, menuTexts.getNewsText(), keyboard);
+    }
+
+    private void editNews(long chatId, int messageId) {
+        var keyboard = new MenuBuilder()
+                .addButton("⬅️ Назад", "back_main")
+                .build();
+
+        messageSender.editMessage(chatId, messageId, menuTexts.getNewsText(), keyboard);
     }
 }

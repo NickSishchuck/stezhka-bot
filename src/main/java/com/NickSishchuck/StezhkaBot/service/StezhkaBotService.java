@@ -79,14 +79,25 @@ public class StezhkaBotService implements LongPollingUpdateConsumer {
     private void handleCallbackQuery(Update update) {
         String callbackData = update.getCallbackQuery().getData();
         long chatId = update.getCallbackQuery().getMessage().getChatId();
+        int messageId = update.getCallbackQuery().getMessage().getMessageId();
         String firstName = update.getCallbackQuery().getFrom().getFirstName();
 
         logger.info("Received callback from {}: {}", firstName, callbackData);
 
+        // Handle admin callbacks
         if (adminHandler.canHandle(callbackData)) {
-            adminHandler.handle(chatId, callbackData);
+            adminHandler.handle(chatId, messageId, callbackData);
+            // Answer callback query to remove loading indicator
+            try {
+                telegramClient.execute(org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery.builder()
+                        .callbackQueryId(update.getCallbackQuery().getId())
+                        .build());
+            } catch (Exception e) {
+                logger.warn("Failed to answer callback query", e);
+            }
             return;
         }
+
         // Answer callback query to remove loading indicator
         try {
             telegramClient.execute(org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery.builder()
@@ -96,8 +107,8 @@ public class StezhkaBotService implements LongPollingUpdateConsumer {
             logger.warn("Failed to answer callback query", e);
         }
 
-        // Delegate to appropriate handler
-        handlerRegistry.handle(chatId, callbackData);
+        // Delegate to appropriate handler using edit method for callback queries
+        handlerRegistry.handle(chatId, messageId, callbackData);
     }
 
     public String getBotUsername() {
