@@ -1,5 +1,7 @@
 package com.NickSishchuck.StezhkaBot.handler;
 
+import com.NickSishchuck.StezhkaBot.service.AdminStateService;
+import com.NickSishchuck.StezhkaBot.service.EnrollmentService;
 import com.NickSishchuck.StezhkaBot.service.StezhkaBotService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,16 +20,21 @@ public class AdminHandler implements MenuHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(StezhkaBotService.class);
     private final TextContentService textContentService;
+    private final AdminStateService adminStateService;
+    private final EnrollmentService enrollmentService;
     private TelegramClient telegramClient;
     private MessageSender messageSender;
 
-    // List of admin user IDs TODO move to db layer
+    // List of admin user IDs
     @Value("${bot.admin.user.ids:}")
     private String adminUserIds;
 
     @Autowired
-    public AdminHandler(TextContentService textContentService) {
+    public AdminHandler(TextContentService textContentService, AdminStateService adminStateService,
+                        EnrollmentService enrollmentService) {
         this.textContentService = textContentService;
+        this.adminStateService = adminStateService;
+        this.enrollmentService = enrollmentService;
     }
 
     @Override
@@ -41,7 +48,7 @@ public class AdminHandler implements MenuHandler {
         return callbackData.startsWith("admin_") ||
                 callbackData.equals("/admin") ||
                 callbackData.startsWith("text_edit_") ||
-                callbackData.startsWith("text_update_");
+                callbackData.equals("cancel_edit");
     }
 
     @Override
@@ -65,10 +72,12 @@ public class AdminHandler implements MenuHandler {
             case "admin_specialists" -> showSpecialistsManagement(chatId);
             case "admin_refresh" -> refreshContent(chatId);
             case "admin_list_all" -> listAllTexts(chatId);
+            case "admin_stats" -> showStatistics(chatId);
+            case "cancel_edit" -> cancelEditing(chatId);
             default -> {
                 if (callbackData.startsWith("text_edit_")) {
                     String key = callbackData.substring("text_edit_".length());
-                    showTextEditor(chatId, key);
+                    startTextEditing(chatId, key);
                 }
             }
         }
@@ -95,12 +104,130 @@ public class AdminHandler implements MenuHandler {
             case "admin_specialists" -> editSpecialistsManagement(chatId, messageId);
             case "admin_refresh" -> refreshContent(chatId, messageId);
             case "admin_list_all" -> listAllTexts(chatId);
+            case "admin_stats" -> showStatistics(chatId);
+            case "cancel_edit" -> cancelEditing(chatId, messageId);
             default -> {
                 if (callbackData.startsWith("text_edit_")) {
                     String key = callbackData.substring("text_edit_".length());
-                    editTextEditor(chatId, messageId, key);
+                    startTextEditingWithEdit(chatId, messageId, key);
                 }
             }
+        }
+    }
+
+    /**
+     * Process text input from admin (for text updates)
+     */
+    public boolean processTextInput(long chatId, String messageText) {
+        if (!isAdmin(chatId)) {
+            return false;
+        }
+
+        AdminStateService.EditingState editingState = adminStateService.getEditingState(chatId);
+        if (editingState == null) {
+            return false;
+        }
+
+        String textKey = editingState.getTextKey();
+
+        // Update the text
+        boolean success = textContentService.updateText(textKey, messageText);
+
+        if (success) {
+            adminStateService.clearEditingState(chatId);
+
+            String successMessage = String.format(
+                    "✅ Text updated successfully!\n\n" +
+                            "📝 Key: %s\n" +
+                            "📏 New length: %d characters",
+                    textKey, messageText.length()
+            );
+
+            var keyboard = new MenuBuilder()
+                    .addButton("📝 Edit Another", getBackButtonForTextKey(textKey))
+                    .addButton("⬅️ Back to Admin", "admin_main")
+                    .build();
+
+            messageSender.sendMessage(chatId, successMessage, keyboard);
+        } else {
+            messageSender.sendMessage(chatId, "❌ Failed to update text. Please try again.",
+                    new MenuBuilder().addButton("❌ Cancel", "cancel_edit").build());
+        }
+
+        return true;
+    }
+
+    private void startTextEditing(long chatId, String textKey) {
+        String currentText = textContentService.getText(textKey);
+        adminStateService.startEditing(chatId, textKey, currentText);
+
+        var keyboard = new MenuBuilder()
+                .addButton("❌ Cancel", "cancel_edit")
+                .build();
+
+        String message = String.format(
+                "📝 *Editing: %s*\n\n" +
+                        "Current text:\n" +
+                        "═══════════════════\n" +
+                        "%s\n" +
+                        "═══════════════════\n\n" +
+                        "✏️ *Send your new text in the next message*",
+                escapeMarkdown(textKey), escapeMarkdown(currentText)
+        );
+
+        messageSender.sendMarkdownMessage(chatId, message, keyboard);
+    }
+
+    private void startTextEditingWithEdit(long chatId, int messageId, String textKey) {
+        String currentText = textContentService.getText(textKey);
+        adminStateService.startEditing(chatId, textKey, currentText);
+
+        var keyboard = new MenuBuilder()
+                .addButton("❌ Cancel", "cancel_edit")
+                .build();
+
+        String message = String.format(
+                "📝 *Editing: %s*\n\n" +
+                        "Current text:\n" +
+                        "═══════════════════\n" +
+                        "%s\n" +
+                        "═══════════════════\n\n" +
+                        "✏️ *Send your new text in the next message*",
+                escapeMarkdown(textKey), escapeMarkdown(currentText)
+        );
+
+        messageSender.editMarkdownMessage(chatId, messageId, message, keyboard);
+    }
+
+    private void cancelEditing(long chatId) {
+        AdminStateService.EditingState state = adminStateService.getEditingState(chatId);
+        if (state != null) {
+            adminStateService.clearEditingState(chatId);
+
+            var keyboard = new MenuBuilder()
+                    .addButton("⬅️ Back", getBackButtonForTextKey(state.getTextKey()))
+                    .build();
+
+            messageSender.sendMessage(chatId, "❌ Editing cancelled", keyboard);
+        } else {
+            messageSender.sendMessage(chatId, "Nothing to cancel",
+                    new MenuBuilder().addButton("⬅️ Back", "admin_main").build());
+        }
+    }
+
+    private void cancelEditing(long chatId, int messageId) {
+        AdminStateService.EditingState state = adminStateService.getEditingState(chatId);
+        if (state != null) {
+            adminStateService.clearEditingState(chatId);
+
+            var keyboard = new MenuBuilder()
+                    .addButton("⬅️ Back", getBackButtonForTextKey(state.getTextKey()))
+                    .build();
+
+            messageSender.editMessage(chatId, messageId, "❌ Editing cancelled", keyboard);
+        } else {
+            messageSender.editMessage(chatId, messageId, "Nothing to cancel",
+                    new MenuBuilder().addButton("⬅️ Back", "admin_main").build());
         }
     }
 
@@ -108,6 +235,9 @@ public class AdminHandler implements MenuHandler {
         var keyboard = new MenuBuilder()
                 .addButton("📝 Content Management", "admin_content")
                 .addButton("🎓 Programs Management", "admin_programs")
+                .addRow()
+                .addButton("📋 Enrollment Requests", "/requests")
+                .addButton("📊 Statistics", "admin_stats")
                 .addRow()
                 .addButton("🔄 Refresh Cache", "admin_refresh")
                 .addButton("📋 List All Texts", "admin_list_all")
@@ -123,6 +253,9 @@ public class AdminHandler implements MenuHandler {
         var keyboard = new MenuBuilder()
                 .addButton("📝 Content Management", "admin_content")
                 .addButton("🎓 Programs Management", "admin_programs")
+                .addRow()
+                .addButton("📋 Enrollment Requests", "/requests")
+                .addButton("📊 Statistics", "admin_stats")
                 .addRow()
                 .addButton("🔄 Refresh Cache", "admin_refresh")
                 .addButton("📋 List All Texts", "admin_list_all")
@@ -248,54 +381,17 @@ public class AdminHandler implements MenuHandler {
         messageSender.sendMessage(chatId, message, keyboard);
     }
 
-    private void showTextEditor(long chatId, String textKey) {
-        String currentText = textContentService.getText(textKey);
-
-        var keyboard = new MenuBuilder()
-                .addButton("⬅️ Back", getBackButtonForTextKey(textKey))
-                .build();
-
-        String message = String.format(
-                "📝 Editing: %s\n\n" +
-                        "Current text:\n" +
-                        "═══════════════════\n" +
-                        "%s\n" +
-                        "═══════════════════\n\n" +
-                        "💡 To update, send a message like this:\n\n" +
-                        "/update_text %s\n" +
-                        "Your new text content here\n",
-                textKey, currentText, textKey
-        );
-
-        messageSender.sendPlainMessage(chatId, message, keyboard);
-    }
-
-    private String getBackButtonForTextKey(String textKey) {
-        // Return appropriate back button based on text key
-        if (textKey.startsWith("PROGRAM_")) {
-            if (textKey.contains("PRESCHOOL")) return "admin_age_4_6";
-            if (textKey.contains("PRIMARY") || textKey.contains("ENGLISH") ||
-                    textKey.contains("FINANCIAL") || textKey.contains("CREATIVE")) return "admin_age_6_10";
-            if (textKey.contains("TEEN")) return "admin_age_11_15";
-            if (textKey.contains("NMT")) return "admin_age_15_18";
-            if (textKey.contains("PSYCHOLOGIST") || textKey.contains("SPEECH")) return "admin_specialists";
-            return "admin_programs";
-        }
-        if (textKey.startsWith("AGE_") || textKey.equals("SPECIALISTS_MESSAGE")) {
-            return "admin_age_groups";
-        }
-        return "admin_content";
-    }
-
     /**
-     * Escape MarkdownV2 special characters for display in admin messages
+     * Escape Markdown special characters
      */
-    private String escapeMarkdownV2(String text) {
+    private String escapeMarkdown(String text) {
         if (text == null) return "";
 
-        // Escape special MarkdownV2 characters
-        return text.replace("\\", "\\\\")
-                .replace("_", "\\_")
+        // First, escape backslashes
+        text = text.replace("\\", "\\\\");
+
+        // Then escape other special characters
+        return text.replace("_", "\\_")
                 .replace("*", "\\*")
                 .replace("[", "\\[")
                 .replace("]", "\\]")
@@ -430,28 +526,6 @@ public class AdminHandler implements MenuHandler {
         messageSender.editMessage(chatId, messageId, message, keyboard);
     }
 
-    private void editTextEditor(long chatId, int messageId, String textKey) {
-        String currentText = textContentService.getText(textKey);
-
-        var keyboard = new MenuBuilder()
-                .addButton("⬅️ Back", getBackButtonForTextKey(textKey))
-                .build();
-
-        String message = String.format(
-                "📝 Editing: %s\n\n" +
-                        "Current text:\n" +
-                        "═══════════════════\n" +
-                        "%s\n" +
-                        "═══════════════════\n\n" +
-                        "💡 To update, send a message like this:\n\n" +
-                        "/update_text %s\n" +
-                        "Your new text content here\n",
-                textKey, currentText, textKey
-        );
-
-        messageSender.editPlainMessage(chatId, messageId, message, keyboard);
-    }
-
     private void refreshContent(long chatId, int messageId) {
         try {
             textContentService.refreshCache();
@@ -513,6 +587,30 @@ public class AdminHandler implements MenuHandler {
         messageSender.sendPlainMessage(chatId, message.toString(), keyboard);
     }
 
+    private void showStatistics(long chatId) {
+        String stats = enrollmentService.getStatistics();
+        var keyboard = new MenuBuilder()
+                .addButton("⬅️ Back", "admin_main")
+                .build();
+        messageSender.sendMessage(chatId, stats, keyboard);
+    }
+
+    private String getBackButtonForTextKey(String textKey) {
+        // Return appropriate back button based on text key
+        if (textKey.startsWith("PROGRAM_")) {
+            if (textKey.contains("PRESCHOOL")) return "admin_age_4_6";
+            if (textKey.contains("PRIMARY") || textKey.contains("ENGLISH") ||
+                    textKey.contains("FINANCIAL") || textKey.contains("CREATIVE")) return "admin_age_6_10";
+            if (textKey.contains("TEEN")) return "admin_age_11_15";
+            if (textKey.contains("NMT")) return "admin_age_15_18";
+            if (textKey.contains("PSYCHOLOGIST") || textKey.contains("SPEECH")) return "admin_specialists";
+            return "admin_programs";
+        }
+        if (textKey.startsWith("AGE_") || textKey.equals("SPECIALISTS_MESSAGE")) {
+            return "admin_age_groups";
+        }
+        return "admin_content";
+    }
 
     // Helper method to check if user is admin
     private boolean isAdmin(long userId) {
@@ -529,57 +627,5 @@ public class AdminHandler implements MenuHandler {
             }
         }
         return false;
-    }
-
-    /**
-     * Handle text update commands
-     */
-    public boolean handleTextUpdate(long chatId, String messageText) {
-        if (!isAdmin(chatId)) {
-            return false;
-        }
-
-        if (!messageText.startsWith("/update_text ")) {
-            return false;
-        }
-
-        String content = messageText.substring("/update_text ".length()).trim();
-
-        // Split on first whitespace (space, newline, tab, etc.)
-        String[] parts = content.split("\\s+", 2);
-
-        if (parts.length < 2) {
-            messageSender.sendPlainMessage(chatId,
-                    "❌ Invalid format. Use:\n/update_text TEXT_KEY new content here\n\nOr:\n/update_text TEXT_KEY\nnew content here",
-                    new MenuBuilder().addButton("⬅️ Back", "admin_content").build());
-            return true;
-        }
-
-        String textKey = parts[0].trim();
-        String newValue = parts[1].trim();
-
-        if (textKey.isEmpty() || newValue.isEmpty()) {
-            messageSender.sendPlainMessage(chatId,
-                    "❌ Both key and value are required.\n\nFormat: /update_text TEXT_KEY new content here",
-                    new MenuBuilder().addButton("⬅️ Back", "admin_content").build());
-            return true;
-        }
-
-        // Log what we're actually updating
-        logger.info("Admin {} updating text key '{}' with value: '{}'", chatId, textKey, newValue);
-
-        boolean success = textContentService.updateText(textKey, newValue);
-
-        String responseMessage = success
-                ? String.format("✅ Text updated successfully!\n\nKey: %s\nNew content length: %d characters", textKey, newValue.length())
-                : "❌ Failed to update text. Please try again.";
-
-        var keyboard = new MenuBuilder()
-                .addButton("📝 Edit Another", getBackButtonForTextKey(textKey))
-                .addButton("⬅️ Back to Admin", "admin_main")
-                .build();
-
-        messageSender.sendPlainMessage(chatId, responseMessage, keyboard);
-        return true;
     }
 }

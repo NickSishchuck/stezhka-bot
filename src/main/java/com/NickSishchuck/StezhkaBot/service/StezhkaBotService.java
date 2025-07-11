@@ -79,9 +79,10 @@ public class StezhkaBotService implements LongPollingUpdateConsumer {
             return;
         }
 
-        if (messageText.startsWith("/update_text ")) {
-            boolean handled = adminHandler.handleTextUpdate(chatId, messageText);
-            if (handled) return;
+        // Check if admin is editing text
+        boolean adminEditHandled = adminHandler.processTextInput(chatId, messageText);
+        if (adminEditHandled) {
+            return;
         }
 
         // Check if user is in enrollment process
