@@ -1,6 +1,7 @@
 package com.NickSishchuck.StezhkaBot.service;
 
 import com.NickSishchuck.StezhkaBot.handler.AdminHandler;
+import com.NickSishchuck.StezhkaBot.handler.EnrollmentHandler;
 import com.NickSishchuck.StezhkaBot.handler.MenuHandlerRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,23 +18,27 @@ import java.util.List;
 public class StezhkaBotService implements LongPollingUpdateConsumer {
 
     private static final Logger logger = LoggerFactory.getLogger(StezhkaBotService.class);
-    private final AdminHandler adminHandler;
 
+    private final AdminHandler adminHandler;
+    private final EnrollmentHandler enrollmentHandler;
     private final String botUsername;
     private final MenuHandlerRegistry handlerRegistry;
     private TelegramClient telegramClient;
 
     @Autowired
-    public StezhkaBotService(String botUsername, MenuHandlerRegistry handlerRegistry, AdminHandler adminHandler) {
+    public StezhkaBotService(String botUsername, MenuHandlerRegistry handlerRegistry,
+                             AdminHandler adminHandler, EnrollmentHandler enrollmentHandler) {
         this.botUsername = botUsername;
         this.handlerRegistry = handlerRegistry;
         this.adminHandler = adminHandler;
+        this.enrollmentHandler = enrollmentHandler;
     }
 
     public void setTelegramClient(TelegramClient telegramClient) {
         this.telegramClient = telegramClient;
         handlerRegistry.setTelegramClient(telegramClient);
         adminHandler.setTelegramClient(telegramClient);
+        enrollmentHandler.setTelegramClient(telegramClient);
     }
 
     @Override
@@ -61,7 +66,7 @@ public class StezhkaBotService implements LongPollingUpdateConsumer {
         // Handle /start and any other text messages
         if (messageText.equals("/start")) {
             handlerRegistry.handle(chatId, "start");
-            return; // Important: return here to prevent falling through to the else block
+            return;
         }
 
         if (messageText.startsWith("/admin")) {
@@ -69,13 +74,24 @@ public class StezhkaBotService implements LongPollingUpdateConsumer {
             return;
         }
 
+        if (messageText.equals("/requests")) {
+            enrollmentHandler.handle(chatId, "/requests");
+            return;
+        }
+
         if (messageText.startsWith("/update_text ")) {
             boolean handled = adminHandler.handleTextUpdate(chatId, messageText);
             if (handled) return;
-        } else {
-            // TODO For now, just redirect unknown messages to main menu
-            handlerRegistry.handle(chatId, "main");
         }
+
+        // Check if user is in enrollment process
+        boolean enrollmentHandled = enrollmentHandler.processTextInput(chatId, messageText);
+        if (enrollmentHandled) {
+            return;
+        }
+
+        // For now, just redirect unknown messages to main menu
+        handlerRegistry.handle(chatId, "main");
     }
 
     private void handleCallbackQuery(Update update) {
@@ -86,20 +102,6 @@ public class StezhkaBotService implements LongPollingUpdateConsumer {
 
         logger.info("Received callback from {}: {}", firstName, callbackData);
 
-        // Handle admin callbacks
-        if (adminHandler.canHandle(callbackData)) {
-            adminHandler.handle(chatId, messageId, callbackData);
-            // Answer callback query to remove loading indicator
-            try {
-                telegramClient.execute(org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery.builder()
-                        .callbackQueryId(update.getCallbackQuery().getId())
-                        .build());
-            } catch (Exception e) {
-                logger.warn("Failed to answer callback query", e);
-            }
-            return;
-        }
-
         // Answer callback query to remove loading indicator
         try {
             telegramClient.execute(org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery.builder()
@@ -107,6 +109,18 @@ public class StezhkaBotService implements LongPollingUpdateConsumer {
                     .build());
         } catch (Exception e) {
             logger.warn("Failed to answer callback query", e);
+        }
+
+        // Handle admin callbacks
+        if (adminHandler.canHandle(callbackData)) {
+            adminHandler.handle(chatId, messageId, callbackData);
+            return;
+        }
+
+        // Handle enrollment callbacks
+        if (enrollmentHandler.canHandle(callbackData)) {
+            enrollmentHandler.handle(chatId, messageId, callbackData);
+            return;
         }
 
         // Delegate to appropriate handler using edit method for callback queries
