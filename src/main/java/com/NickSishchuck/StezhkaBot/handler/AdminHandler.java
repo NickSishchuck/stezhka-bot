@@ -1,6 +1,7 @@
 package com.NickSishchuck.StezhkaBot.handler;
 
 import com.NickSishchuck.StezhkaBot.service.AdminStateService;
+import com.NickSishchuck.StezhkaBot.service.ConsultationService;
 import com.NickSishchuck.StezhkaBot.service.EnrollmentService;
 import com.NickSishchuck.StezhkaBot.service.StezhkaBotService;
 import org.slf4j.Logger;
@@ -22,6 +23,7 @@ public class AdminHandler implements MenuHandler {
     private final TextContentService textContentService;
     private final AdminStateService adminStateService;
     private final EnrollmentService enrollmentService;
+    private final ConsultationService consultationService;
     private TelegramClient telegramClient;
     private MessageSender messageSender;
 
@@ -31,10 +33,11 @@ public class AdminHandler implements MenuHandler {
 
     @Autowired
     public AdminHandler(TextContentService textContentService, AdminStateService adminStateService,
-                        EnrollmentService enrollmentService) {
+                        EnrollmentService enrollmentService, ConsultationService consultationService) {
         this.textContentService = textContentService;
         this.adminStateService = adminStateService;
         this.enrollmentService = enrollmentService;
+        this.consultationService = consultationService;
     }
 
     @Override
@@ -237,6 +240,8 @@ public class AdminHandler implements MenuHandler {
                 .addButton("🎓 Programs Management", "admin_programs")
                 .addRow()
                 .addButton("📋 Enrollment Requests", "/requests")
+                .addButton("📞 Consultations", "/consultations")
+                .addRow()
                 .addButton("📊 Statistics", "admin_stats")
                 .addRow()
                 .addButton("🔄 Refresh Cache", "admin_refresh")
@@ -255,6 +260,8 @@ public class AdminHandler implements MenuHandler {
                 .addButton("🎓 Programs Management", "admin_programs")
                 .addRow()
                 .addButton("📋 Enrollment Requests", "/requests")
+                .addButton("📞 Consultations", "/consultations")
+                .addRow()
                 .addButton("📊 Statistics", "admin_stats")
                 .addRow()
                 .addButton("🔄 Refresh Cache", "admin_refresh")
@@ -588,7 +595,13 @@ public class AdminHandler implements MenuHandler {
     }
 
     private void showStatistics(long chatId) {
-        String stats = enrollmentService.getStatistics();
+        String enrollmentStats = enrollmentService.getStatistics();
+        long unprocessedConsultations = consultationService.getUnprocessedConsultationsCount();
+
+        String stats = enrollmentStats + "\n\n" +
+                "📞 *Консультації*\n" +
+                "⏳ Необроблені: " + unprocessedConsultations;
+
         var keyboard = new MenuBuilder()
                 .addButton("⬅️ Back", "admin_main")
                 .build();

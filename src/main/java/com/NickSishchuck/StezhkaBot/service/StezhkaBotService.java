@@ -1,6 +1,7 @@
 package com.NickSishchuck.StezhkaBot.service;
 
 import com.NickSishchuck.StezhkaBot.handler.AdminHandler;
+import com.NickSishchuck.StezhkaBot.handler.ConsultationHandler;
 import com.NickSishchuck.StezhkaBot.handler.EnrollmentHandler;
 import com.NickSishchuck.StezhkaBot.handler.MenuHandlerRegistry;
 import org.slf4j.Logger;
@@ -21,17 +22,20 @@ public class StezhkaBotService implements LongPollingUpdateConsumer {
 
     private final AdminHandler adminHandler;
     private final EnrollmentHandler enrollmentHandler;
+    private final ConsultationHandler consultationHandler;
     private final String botUsername;
     private final MenuHandlerRegistry handlerRegistry;
     private TelegramClient telegramClient;
 
     @Autowired
     public StezhkaBotService(String botUsername, MenuHandlerRegistry handlerRegistry,
-                             AdminHandler adminHandler, EnrollmentHandler enrollmentHandler) {
+                             AdminHandler adminHandler, EnrollmentHandler enrollmentHandler,
+                             ConsultationHandler consultationHandler) {
         this.botUsername = botUsername;
         this.handlerRegistry = handlerRegistry;
         this.adminHandler = adminHandler;
         this.enrollmentHandler = enrollmentHandler;
+        this.consultationHandler = consultationHandler;
     }
 
     public void setTelegramClient(TelegramClient telegramClient) {
@@ -39,6 +43,7 @@ public class StezhkaBotService implements LongPollingUpdateConsumer {
         handlerRegistry.setTelegramClient(telegramClient);
         adminHandler.setTelegramClient(telegramClient);
         enrollmentHandler.setTelegramClient(telegramClient);
+        consultationHandler.setTelegramClient(telegramClient);
     }
 
     @Override
@@ -79,6 +84,11 @@ public class StezhkaBotService implements LongPollingUpdateConsumer {
             return;
         }
 
+        if (messageText.equals("/consultations")) {
+            consultationHandler.handle(chatId, "/consultations");
+            return;
+        }
+
         // Check if admin is editing text
         boolean adminEditHandled = adminHandler.processTextInput(chatId, messageText);
         if (adminEditHandled) {
@@ -88,6 +98,12 @@ public class StezhkaBotService implements LongPollingUpdateConsumer {
         // Check if user is in enrollment process
         boolean enrollmentHandled = enrollmentHandler.processTextInput(chatId, messageText);
         if (enrollmentHandled) {
+            return;
+        }
+
+        // Check if user is in consultation process
+        boolean consultationHandled = consultationHandler.processTextInput(chatId, messageText);
+        if (consultationHandled) {
             return;
         }
 
@@ -121,6 +137,12 @@ public class StezhkaBotService implements LongPollingUpdateConsumer {
         // Handle enrollment callbacks
         if (enrollmentHandler.canHandle(callbackData)) {
             enrollmentHandler.handle(chatId, messageId, callbackData);
+            return;
+        }
+
+        // Handle consultation callbacks
+        if (consultationHandler.canHandle(callbackData)) {
+            consultationHandler.handle(chatId, messageId, callbackData);
             return;
         }
 
