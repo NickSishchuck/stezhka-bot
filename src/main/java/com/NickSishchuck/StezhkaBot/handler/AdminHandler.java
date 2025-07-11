@@ -59,8 +59,8 @@ public class AdminHandler implements MenuHandler {
     public void handle(long chatId, String callbackData) {
         // Check if user is admin
         if (!isAdmin(chatId)) {
-            messageSender.sendMessage(chatId, "❌ Access denied. Admin privileges required.",
-                    new MenuBuilder().addButton("⬅️ Back", "main").build());
+            messageSender.sendMessage(chatId, "❌ Доступ заблоковано",
+                    new MenuBuilder().addButton("⬅️ Назад", "main").build());
             return;
         }
 
@@ -89,35 +89,35 @@ public class AdminHandler implements MenuHandler {
 
     private void showVacationManagement(long chatId) {
         var keyboard = new MenuBuilder()
-                .addButton("🍂 Edit Autumn Vacation", "text_edit_PROGRAM_AUTUMN_VACATION_DETAILS")
-                .addButton("❄️ Edit Winter Vacation", "text_edit_PROGRAM_WINTER_VACATION_DETAILS")
+                .addButton("🍂 Осінні канікули", "text_edit_PROGRAM_AUTUMN_VACATION_DETAILS")
+                .addButton("❄️ Зимові канікули", "text_edit_PROGRAM_WINTER_VACATION_DETAILS")
                 .addRow()
-                .addButton("🌸 Edit Spring Vacation", "text_edit_PROGRAM_SPRING_VACATION_DETAILS")
-                .addButton("☀️ Edit Summer Vacation", "text_edit_PROGRAM_SUMMER_VACATION_DETAILS")
+                .addButton("🌸 Весінні канікули", "text_edit_PROGRAM_SPRING_VACATION_DETAILS")
+                .addButton("☀️ Літні канікули", "text_edit_PROGRAM_SUMMER_VACATION_DETAILS")
                 .addRow()
-                .addButton("📝 Edit Vacation Menu", "text_edit_VACATION_MENU_MESSAGE")
+                .addButton("📝 Меню канікул", "text_edit_VACATION_MENU_MESSAGE")
                 .addRow()
-                .addButton("⬅️ Back", "admin_programs")
+                .addButton("⬅️ Назад", "admin_programs")
                 .build();
 
-        String message = "🎄 *Vacation Programs Management*\n\nSelect vacation program to edit:";
+        String message = "🎄 *Менеджмент канікулярних програм*\n\nОберіть текст для редагування:";
         messageSender.sendMessage(chatId, message, keyboard);
     }
 
     private void editVacationManagement(long chatId, int messageId) {
         var keyboard = new MenuBuilder()
-                .addButton("🍂 Edit Autumn Vacation", "text_edit_PROGRAM_AUTUMN_VACATION_DETAILS")
-                .addButton("❄️ Edit Winter Vacation", "text_edit_PROGRAM_WINTER_VACATION_DETAILS")
+                .addButton("🍂 Осінні канікули", "text_edit_PROGRAM_AUTUMN_VACATION_DETAILS")
+                .addButton("❄️ Зимові канікули", "text_edit_PROGRAM_WINTER_VACATION_DETAILS")
                 .addRow()
-                .addButton("🌸 Edit Spring Vacation", "text_edit_PROGRAM_SPRING_VACATION_DETAILS")
-                .addButton("☀️ Edit Summer Vacation", "text_edit_PROGRAM_SUMMER_VACATION_DETAILS")
+                .addButton("🌸 Весінні канікули", "text_edit_PROGRAM_SPRING_VACATION_DETAILS")
+                .addButton("☀️ Літні канікули", "text_edit_PROGRAM_SUMMER_VACATION_DETAILS")
                 .addRow()
-                .addButton("📝 Edit Vacation Menu", "text_edit_VACATION_MENU_MESSAGE")
+                .addButton("📝 Меню канікул", "text_edit_VACATION_MENU_MESSAGE")
                 .addRow()
-                .addButton("⬅️ Back", "admin_programs")
+                .addButton("⬅️ Назад", "admin_programs")
                 .build();
 
-        String message = "🎄 *Vacation Programs Management*\n\nSelect vacation program to edit:";
+        String message = "🎄 *Менеджмент канікулярних програм*\n\nОберіть канікулярну програму для редагування:";
         messageSender.editMessage(chatId, messageId, message, keyboard);
     }
 
@@ -125,8 +125,8 @@ public class AdminHandler implements MenuHandler {
     public void handle(long chatId, int messageId, String callbackData) {
         // Check if user is admin
         if (!isAdmin(chatId)) {
-            messageSender.editMessage(chatId, messageId, "❌ Access denied. Admin privileges required.",
-                    new MenuBuilder().addButton("⬅️ Back", "main").build());
+            messageSender.editMessage(chatId, messageId, "❌ В доступі відхилено.",
+                    new MenuBuilder().addButton("⬅️ Назад", "main").build());
             return;
         }
 
@@ -147,7 +147,7 @@ public class AdminHandler implements MenuHandler {
             case "/requests" -> {
                 // Redirect to enrollment requests - edit current message to show we're redirecting
                 messageSender.editMessage(chatId, messageId,
-                        "📋 Loading enrollment requests...",
+                        "📋 Завантаження заявок на зарахування...",
                         new MenuBuilder().build());
                 // Then show the requests (this will send a new message)
                 showEnrollmentRequests(chatId);
@@ -155,7 +155,7 @@ public class AdminHandler implements MenuHandler {
             case "/consultations" -> {
                 // Redirect to consultations - edit current message to show we're redirecting
                 messageSender.editMessage(chatId, messageId,
-                        "📞 Loading consultations...",
+                        "📞 Завантаження консультацій...",
                         new MenuBuilder().build());
                 // Then show the consultations (this will send a new message)
                 showConsultations(chatId);
@@ -191,21 +191,21 @@ public class AdminHandler implements MenuHandler {
             adminStateService.clearEditingState(chatId);
 
             String successMessage = String.format(
-                    "✅ Text updated successfully!\n\n" +
-                            "📝 Key: %s\n" +
-                            "📏 New length: %d characters",
+                    "✅ Текст редаговано успішно!\n\n" +
+                            "📝 Ключ: %s\n" +
+                            "📏 Нова довжина тексту: %d символів",
                     textKey, messageText.length()
             );
 
             var keyboard = new MenuBuilder()
-                    .addButton("📝 Edit Another", getBackButtonForTextKey(textKey))
-                    .addButton("⬅️ Back to Admin", "admin_main")
+                    .addButton("📝 Редагувати ще", getBackButtonForTextKey(textKey))
+                    .addButton("⬅️ Назад в АдмінМеню", "admin_main")
                     .build();
 
             messageSender.sendMessage(chatId, successMessage, keyboard);
         } else {
-            messageSender.sendMessage(chatId, "❌ Failed to update text. Please try again.",
-                    new MenuBuilder().addButton("❌ Cancel", "cancel_edit").build());
+            messageSender.sendMessage(chatId, "❌ Щось пішло не так. Спробуйте ще раз.",
+                    new MenuBuilder().addButton("❌ Відмінити", "cancel_edit").build());
         }
 
         return true;
@@ -216,16 +216,16 @@ public class AdminHandler implements MenuHandler {
         adminStateService.startEditing(chatId, textKey, currentText);
 
         var keyboard = new MenuBuilder()
-                .addButton("❌ Cancel", "cancel_edit")
+                .addButton("❌ Відмінити", "cancel_edit")
                 .build();
 
         String message = String.format(
-                "📝 *Editing: %s*\n\n" +
-                        "Current text:\n" +
+                "📝 *Редагую: %s*\n\n" +
+                        "Текст зараз:\n" +
                         "═══════════════════\n" +
                         "%s\n" +
                         "═══════════════════\n\n" +
-                        "✏️ *Send your new text in the next message*",
+                        "✏️ Відправте нове повідомлення щоб замінити старе",
                 escapeMarkdown(textKey), escapeMarkdown(currentText)
         );
 
@@ -237,16 +237,16 @@ public class AdminHandler implements MenuHandler {
         adminStateService.startEditing(chatId, textKey, currentText);
 
         var keyboard = new MenuBuilder()
-                .addButton("❌ Cancel", "cancel_edit")
+                .addButton("❌ Відмінити", "cancel_edit")
                 .build();
 
         String message = String.format(
-                "📝 *Editing: %s*\n\n" +
-                        "Current text:\n" +
+                "📝 *Редагую: %s*\n\n" +
+                        "Текст зараз:\n" +
                         "═══════════════════\n" +
                         "%s\n" +
                         "═══════════════════\n\n" +
-                        "✏️ *Send your new text in the next message*",
+                        "✏️ Відправте нове повідомлення щоб замінити старе",
                 escapeMarkdown(textKey), escapeMarkdown(currentText)
         );
 
@@ -259,13 +259,13 @@ public class AdminHandler implements MenuHandler {
             adminStateService.clearEditingState(chatId);
 
             var keyboard = new MenuBuilder()
-                    .addButton("⬅️ Back", getBackButtonForTextKey(state.getTextKey()))
+                    .addButton("⬅️ Назад", getBackButtonForTextKey(state.getTextKey()))
                     .build();
 
-            messageSender.sendMessage(chatId, "❌ Editing cancelled", keyboard);
+            messageSender.sendMessage(chatId, "❌ Редагування відмінено", keyboard);
         } else {
-            messageSender.sendMessage(chatId, "Nothing to cancel",
-                    new MenuBuilder().addButton("⬅️ Back", "admin_main").build());
+            messageSender.sendMessage(chatId, "Нічого відміняти",
+                    new MenuBuilder().addButton("⬅️ Назад", "admin_main").build());
         }
     }
 
@@ -275,170 +275,164 @@ public class AdminHandler implements MenuHandler {
             adminStateService.clearEditingState(chatId);
 
             var keyboard = new MenuBuilder()
-                    .addButton("⬅️ Back", getBackButtonForTextKey(state.getTextKey()))
+                    .addButton("⬅️ Назад", getBackButtonForTextKey(state.getTextKey()))
                     .build();
 
-            messageSender.editMessage(chatId, messageId, "❌ Editing cancelled", keyboard);
+            messageSender.editMessage(chatId, messageId, "❌ Редагування відмінено", keyboard);
         } else {
-            messageSender.editMessage(chatId, messageId, "Nothing to cancel",
-                    new MenuBuilder().addButton("⬅️ Back", "admin_main").build());
+            messageSender.editMessage(chatId, messageId, "Нічого відмінювати",
+                    new MenuBuilder().addButton("⬅️ Назад", "admin_main").build());
         }
     }
 
     private void showAdminMenu(long chatId) {
         var keyboard = new MenuBuilder()
-                .addButton("📝 Content Management", "admin_content")
-                .addButton("🎓 Programs Management", "admin_programs")
+                .addButton("📝 Контент Менеджмент", "admin_content")
+                .addButton("🎓 Програми", "admin_programs")
                 .addRow()
-                .addButton("📋 Enrollment Requests", "/requests")
-                .addButton("📞 Consultations", "/consultations")
+                .addButton("📊 Статистика", "admin_stats")
+                .addButton("🔄 Оновлення кешу", "admin_refresh")
                 .addRow()
-                .addButton("📊 Statistics", "admin_stats")
-                .addButton("🔄 Refresh Cache", "admin_refresh")
-                .addRow()
-                .addButton("⬅️ Back to Main", "main")
+                .addButton("⬅️ Назад на Головну", "main")
                 .build();
 
-        String message = "🔧 Admin Panel\n\nSelect an option:";
+        String message = "🔧 Панель адміністратора\n\n/requests; /consultations";
         messageSender.sendPlainMessage(chatId, message, keyboard);
     }
 
     private void editAdminMenu(long chatId, int messageId) {
         var keyboard = new MenuBuilder()
-                .addButton("📝 Content Management", "admin_content")
-                .addButton("🎓 Programs Management", "admin_programs")
+                .addButton("📝 Контент менеджмент", "admin_content")
+                .addButton("🎓 Програми", "admin_programs")
                 .addRow()
-                .addButton("📋 Enrollment Requests", "/requests")
-                .addButton("📞 Consultations", "/consultations")
+                .addButton("📊 Статистика", "admin_stats")
+                .addButton("🔄 Оновлення кешу", "admin_refresh")
                 .addRow()
-                .addButton("📊 Statistics", "admin_stats")
-                .addButton("🔄 Refresh Cache", "admin_refresh")
-                .addRow()
-                .addButton("⬅️ Back to Main", "main")
+                .addButton("⬅️ Назад на Головну", "main")
                 .build();
 
-        String message = "🔧 Admin Panel\n\nSelect an option:";
+        String message = "🔧 Панель адміністратора\n\nОберіть опцію:";
         messageSender.editPlainMessage(chatId, messageId, message, keyboard);
     }
 
     private void showContentManagement(long chatId) {
         var keyboard = new MenuBuilder()
-                .addButton("📝 Edit Welcome Message", "text_edit_WELCOME_MESSAGE")
-                .addButton("📝 Edit Main Menu", "text_edit_MAIN_MENU_MESSAGE")
+                .addButton("📝 Редагувати вітальне повідомлення", "text_edit_WELCOME_MESSAGE")
+                .addButton("📝 Редагувати головне меню", "text_edit_MAIN_MENU_MESSAGE")
                 .addRow()
-                .addButton("📝 Edit Programs Menu", "text_edit_PROGRAMS_MENU_MESSAGE")
-                .addButton("📝 Edit FAQ", "text_edit_FAQ_TEXT")
+                .addButton("📝 Редагувати меню програм", "text_edit_PROGRAMS_MENU_MESSAGE")
+                .addButton("📝 Редагувати FAQ", "text_edit_FAQ_TEXT")
                 .addRow()
-                .addButton("📝 Edit Contacts", "text_edit_CONTACTS_TEXT")
-                .addButton("📝 Edit News", "text_edit_NEWS_TEXT")
+                .addButton("📝 Редагувати контакти", "text_edit_CONTACTS_TEXT")
+                .addButton("📝 Редагувати новини", "text_edit_NEWS_TEXT")
                 .addRow()
-                .addButton("📝 Edit Age Groups", "admin_age_groups")
+                .addButton("📝 Редагувати вікові групи", "admin_age_groups")
                 .addRow()
-                .addButton("⬅️ Back", "admin_main")
+                .addButton("⬅️ Назад", "admin_main")
                 .build();
 
-        String message = "📝 *Content Management*\n\nSelect text to edit:";
+        String message = "📝 *Менеджмент контенту*\n\nОберіть текст для редагування:";
         messageSender.sendMessage(chatId, message, keyboard);
     }
 
     private void showProgramsManagement(long chatId) {
         var keyboard = new MenuBuilder()
-                .addButton("👶 Age 4-6 Programs", "admin_age_4_6")
-                .addButton("🎒 Age 6-10 Programs", "admin_age_6_10")
+                .addButton("👶 Програми 4-6 років", "admin_age_4_6")
+                .addButton("🎒 Програми 6-10 років", "admin_age_6_10")
                 .addRow()
-                .addButton("🧠 Age 11-15 Programs", "admin_age_11_15")
-                .addButton("🎯 Age 15-18 Programs", "admin_age_15_18")
+                .addButton("🧠 Програми 11-15 років", "admin_age_11_15")
+                .addButton("🎯 Програми 15-18 років", "admin_age_15_18")
                 .addRow()
-                .addButton("🎄 Vacation Programs", "admin_vacation_programs")
-                .addButton("👨‍⚕️ Specialists Programs", "admin_specialists")
+                .addButton("🎄 Канікулярні програми", "admin_vacation_programs")
+                .addButton("👨‍⚕️ Програми спеціалістів", "admin_specialists")
                 .addRow()
-                .addButton("⬅️ Back", "admin_main")
+                .addButton("⬅️ Назад", "admin_main")
                 .build();
 
-        String message = "🎓 *Programs Management*\n\nSelect category to manage:";
+        String message = "🎓 *Менеджмент програм*\n\nОберіть категорію для управління:";
         messageSender.sendMessage(chatId, message, keyboard);
     }
 
     private void showAge4to6Management(long chatId) {
         var keyboard = new MenuBuilder()
-                .addButton("📚 Edit Preschool Program", "text_edit_PROGRAM_PRESCHOOL_DETAILS")
+                .addButton("📚 Редагувати дошкільну програму", "text_edit_PROGRAM_PRESCHOOL_DETAILS")
                 .addRow()
-                .addButton("🗣️ Edit Speech Therapist", "text_edit_PROGRAM_SPEECH_THERAPIST_DETAILS")
-                .addButton("🧠 Edit Neuropsychologist", "text_edit_PROGRAM_NEUROPSYCHOLOGIST_PRESCHOOL_DETAILS")
+                .addButton("🗣️ Редагувати логопеда", "text_edit_PROGRAM_SPEECH_THERAPIST_DETAILS")
+                .addButton("🧠 Редагувати нейропсихолога", "text_edit_PROGRAM_NEUROPSYCHOLOGIST_PRESCHOOL_DETAILS")
                 .addRow()
-                .addButton("⬅️ Back", "admin_programs")
+                .addButton("⬅️ Назад", "admin_programs")
                 .build();
 
-        String message = "👶 *Age 4-6 Programs*\n\nSelect program to edit:";
+        String message = "👶 *Програми 4-6 років*\n\nОберіть програму для редагування:";
         messageSender.sendMessage(chatId, message, keyboard);
     }
 
     private void showAge6to10Management(long chatId) {
         var keyboard = new MenuBuilder()
-                .addButton("🏫 Edit Primary School", "text_edit_PROGRAM_PRIMARY_DETAILS")
-                .addButton("🇬🇧 Edit English Program", "text_edit_PROGRAM_ENGLISH_DETAILS")
+                .addButton("🏫 Редагувати початкову школу", "text_edit_PROGRAM_PRIMARY_DETAILS")
+                .addButton("🇬🇧 Редагувати англійську програму", "text_edit_PROGRAM_ENGLISH_DETAILS")
                 .addRow()
-                .addButton("💰 Edit Financial Literacy", "text_edit_PROGRAM_FINANCIAL_DETAILS")
-                .addButton("🎨 Edit Creative Programs", "text_edit_PROGRAM_CREATIVE_DETAILS")
+                .addButton("💰 Редагувати фінансову грамотність", "text_edit_PROGRAM_FINANCIAL_DETAILS")
+                .addButton("🎨 Редагувати творчі програми", "text_edit_PROGRAM_CREATIVE_DETAILS")
                 .addRow()
-                .addButton("⬅️ Back", "admin_programs")
+                .addButton("⬅️ Назад", "admin_programs")
                 .build();
 
-        String message = "🎒 *Age 6-10 Programs*\n\nSelect program to edit:";
+        String message = "🎒 *Програми 6-10 років*\n\nОберіть програму для редагування:";
         messageSender.sendMessage(chatId, message, keyboard);
     }
 
     private void showAge11to15Management(long chatId) {
         var keyboard = new MenuBuilder()
-                .addButton("🧠 Edit Teen Psychology", "text_edit_PROGRAM_TEEN_PSYCHOLOGY_DETAILS")
-                .addButton("🇬🇧 Edit English (Middle)", "text_edit_PROGRAM_ENGLISH_MIDDLE_DETAILS")
+                .addButton("🧠 Редагувати підліткову психологію", "text_edit_PROGRAM_TEEN_PSYCHOLOGY_DETAILS")
+                .addButton("🇬🇧 Редагувати англійську (середня)", "text_edit_PROGRAM_ENGLISH_MIDDLE_DETAILS")
                 .addRow()
-                .addButton("⬅️ Back", "admin_programs")
+                .addButton("⬅️ Назад", "admin_programs")
                 .build();
 
-        String message = "🧠 *Age 11-15 Programs*\n\nSelect program to edit:";
+        String message = "🧠 *Програми 11-15 років*\n\nОберіть програму для редагування:";
         messageSender.sendMessage(chatId, message, keyboard);
     }
 
     private void showAge15to18Management(long chatId) {
         var keyboard = new MenuBuilder()
-                .addButton("🎯 Edit NMT Preparation", "text_edit_PROGRAM_NMT_DETAILS")
+                .addButton("🎯 Редагувати підготовку до НМТ", "text_edit_PROGRAM_NMT_DETAILS")
                 .addRow()
-                .addButton("⬅️ Back", "admin_programs")
+                .addButton("⬅️ Назад", "admin_programs")
                 .build();
 
-        String message = "🎯 *Age 15-18 Programs*\n\nSelect program to edit:";
+        String message = "🎯 *Програми 15-18 років*\n\nОберіть програму для редагування:";
         messageSender.sendMessage(chatId, message, keyboard);
     }
 
     private void showSpecialistsManagement(long chatId) {
         var keyboard = new MenuBuilder()
-                .addButton("👩‍⚕️ Edit Psychologist", "text_edit_PROGRAM_PSYCHOLOGIST_DETAILS")
-                .addButton("🗣️ Edit Speech Therapist", "text_edit_PROGRAM_SPEECH_THERAPIST_DETAILS")
+                .addButton("👩‍⚕️ Редагувати психолога", "text_edit_PROGRAM_PSYCHOLOGIST_DETAILS")
+                .addButton("🗣️ Редагувати логопеда", "text_edit_PROGRAM_SPEECH_THERAPIST_DETAILS")
                 .addRow()
-                .addButton("🧠 Edit Neuropedagog", "text_edit_PROGRAM_NEUROPEDAGOG_DETAILS")
+                .addButton("🧠 Редагувати нейропедагога", "text_edit_PROGRAM_NEUROPEDAGOG_DETAILS")
                 .addRow()
-                .addButton("⬅️ Back", "admin_programs")
+                .addButton("⬅️ Назад", "admin_programs")
                 .build();
 
-        String message = "👨‍⚕️ *Specialists Programs*\n\nSelect program to edit:";
+        String message = "👨‍⚕️ *Програми спеціалістів*\n\nОберіть програму для редагування:";
         messageSender.sendMessage(chatId, message, keyboard);
     }
 
     private void showAgeGroupsManagement(long chatId) {
         var keyboard = new MenuBuilder()
-                .addButton("👶 Edit Age 4-6 Info", "text_edit_AGE_4_6_MESSAGE")
-                .addButton("🎒 Edit Age 6-10 Info", "text_edit_AGE_6_10_MESSAGE")
+                .addButton("👶 Редагувати інфо 4-6 років", "text_edit_AGE_4_6_MESSAGE")
+                .addButton("🎒 Редагувати інфо 6-10 років", "text_edit_AGE_6_10_MESSAGE")
                 .addRow()
-                .addButton("🧠 Edit Age 11-15 Info", "text_edit_AGE_11_15_MESSAGE")
-                .addButton("🎯 Edit Age 15-18 Info", "text_edit_AGE_15_18_MESSAGE")
+                .addButton("🧠 Редагувати інфо 11-15 років", "text_edit_AGE_11_15_MESSAGE")
+                .addButton("🎯 Редагувати інфо 15-18 років", "text_edit_AGE_15_18_MESSAGE")
                 .addRow()
-                .addButton("👨‍⚕️ Edit Specialists Info", "text_edit_SPECIALISTS_MESSAGE")
+                .addButton("👨‍⚕️ Редагувати інфо спеціалістів", "text_edit_SPECIALISTS_MESSAGE")
                 .addRow()
-                .addButton("⬅️ Back", "admin_content")
+                .addButton("⬅️ Назад", "admin_content")
                 .build();
 
-        String message = "📝 *Age Groups Information*\n\nSelect age group info to edit:";
+        String message = "📝 *Інформація про вікові групи*\n\nОберіть інформацію вікової групи для редагування:";
         messageSender.sendMessage(chatId, message, keyboard);
     }
 
@@ -475,122 +469,122 @@ public class AdminHandler implements MenuHandler {
     // Edit methods for all admin panels
     private void editContentManagement(long chatId, int messageId) {
         var keyboard = new MenuBuilder()
-                .addButton("📝 Edit Welcome Message", "text_edit_WELCOME_MESSAGE")
-                .addButton("📝 Edit Main Menu", "text_edit_MAIN_MENU_MESSAGE")
+                .addButton("📝 Редагувати вітальне повідомлення", "text_edit_WELCOME_MESSAGE")
+                .addButton("📝 Редагувати головне меню", "text_edit_MAIN_MENU_MESSAGE")
                 .addRow()
-                .addButton("📝 Edit Programs Menu", "text_edit_PROGRAMS_MENU_MESSAGE")
-                .addButton("📝 Edit FAQ", "text_edit_FAQ_TEXT")
+                .addButton("📝 Редагувати меню програм", "text_edit_PROGRAMS_MENU_MESSAGE")
+                .addButton("📝 Редагувати FAQ", "text_edit_FAQ_TEXT")
                 .addRow()
-                .addButton("📝 Edit Contacts", "text_edit_CONTACTS_TEXT")
-                .addButton("📝 Edit News", "text_edit_NEWS_TEXT")
+                .addButton("📝 Редагувати контакти", "text_edit_CONTACTS_TEXT")
+                .addButton("📝 Редагувати новини", "text_edit_NEWS_TEXT")
                 .addRow()
-                .addButton("📝 Edit Age Groups", "admin_age_groups")
+                .addButton("📝 Редагувати вікові групи", "admin_age_groups")
                 .addRow()
-                .addButton("⬅️ Back", "admin_main")
+                .addButton("⬅️ Назад", "admin_main")
                 .build();
 
-        String message = "📝 *Content Management*\n\nSelect text to edit:";
+        String message = "📝 *Менеджмент контенту*\n\nОберіть текст для редагування:";
         messageSender.editMessage(chatId, messageId, message, keyboard);
     }
 
     private void editProgramsManagement(long chatId, int messageId) {
         var keyboard = new MenuBuilder()
-                .addButton("👶 Age 4-6 Programs", "admin_age_4_6")
-                .addButton("🎒 Age 6-10 Programs", "admin_age_6_10")
+                .addButton("👶 Програми 4-6 років", "admin_age_4_6")
+                .addButton("🎒 Програми 6-10 років", "admin_age_6_10")
                 .addRow()
-                .addButton("🧠 Age 11-15 Programs", "admin_age_11_15")
-                .addButton("🎯 Age 15-18 Programs", "admin_age_15_18")
+                .addButton("🧠 Програми 11-15 років", "admin_age_11_15")
+                .addButton("🎯 Програми 15-18 років", "admin_age_15_18")
                 .addRow()
-                .addButton("🎄 Vacation Programs", "admin_vacation_programs")
-                .addButton("👨‍⚕️ Specialists Programs", "admin_specialists")
+                .addButton("🎄 Канікулярні програми", "admin_vacation_programs")
+                .addButton("👨‍⚕️ Програми спеціалістів", "admin_specialists")
                 .addRow()
-                .addButton("⬅️ Back", "admin_main")
+                .addButton("⬅️ Назад", "admin_main")
                 .build();
 
-        String message = "🎓 *Programs Management*\n\nSelect category to manage:";
+        String message = "🎓 *Менеджмент програм*\n\nОберіть категорію для управління:";
         messageSender.editMessage(chatId, messageId, message, keyboard);
     }
 
     private void editAge4to6Management(long chatId, int messageId) {
         var keyboard = new MenuBuilder()
-                .addButton("📚 Edit Preschool Program", "text_edit_PROGRAM_PRESCHOOL_DETAILS")
+                .addButton("📚 Редагувати дошкільну програму", "text_edit_PROGRAM_PRESCHOOL_DETAILS")
                 .addRow()
-                .addButton("🗣️ Edit Speech Therapist", "text_edit_PROGRAM_SPEECH_THERAPIST_DETAILS")
-                .addButton("🧠 Edit Neuropsychologist", "text_edit_PROGRAM_NEUROPSYCHOLOGIST_PRESCHOOL_DETAILS")
+                .addButton("🗣️ Редагувати логопеда", "text_edit_PROGRAM_SPEECH_THERAPIST_DETAILS")
+                .addButton("🧠 Редагувати нейропсихолога", "text_edit_PROGRAM_NEUROPSYCHOLOGIST_PRESCHOOL_DETAILS")
                 .addRow()
-                .addButton("⬅️ Back", "admin_programs")
+                .addButton("⬅️ Назад", "admin_programs")
                 .build();
 
-        String message = "👶 *Age 4-6 Programs*\n\nSelect program to edit:";
+        String message = "👶 *Програми 4-6 років*\n\nОберіть програму для редагування:";
         messageSender.editMessage(chatId, messageId, message, keyboard);
     }
 
     private void editAge6to10Management(long chatId, int messageId) {
         var keyboard = new MenuBuilder()
-                .addButton("🏫 Edit Primary School", "text_edit_PROGRAM_PRIMARY_DETAILS")
-                .addButton("🇬🇧 Edit English Program", "text_edit_PROGRAM_ENGLISH_DETAILS")
+                .addButton("🏫 Редагувати початкову школу", "text_edit_PROGRAM_PRIMARY_DETAILS")
+                .addButton("🇬🇧 Редагувати англійську програму", "text_edit_PROGRAM_ENGLISH_DETAILS")
                 .addRow()
-                .addButton("💰 Edit Financial Literacy", "text_edit_PROGRAM_FINANCIAL_DETAILS")
-                .addButton("🎨 Edit Creative Programs", "text_edit_PROGRAM_CREATIVE_DETAILS")
+                .addButton("💰 Редагувати фінансову грамотність", "text_edit_PROGRAM_FINANCIAL_DETAILS")
+                .addButton("🎨 Редагувати творчі програми", "text_edit_PROGRAM_CREATIVE_DETAILS")
                 .addRow()
-                .addButton("⬅️ Back", "admin_programs")
+                .addButton("⬅️ Назад", "admin_programs")
                 .build();
 
-        String message = "🎒 *Age 6-10 Programs*\n\nSelect program to edit:";
+        String message = "🎒 *Програми 6-10 років*\n\nОберіть програму для редагування:";
         messageSender.editMessage(chatId, messageId, message, keyboard);
     }
 
     private void editAge11to15Management(long chatId, int messageId) {
         var keyboard = new MenuBuilder()
-                .addButton("🧠 Edit Teen Psychology", "text_edit_PROGRAM_TEEN_PSYCHOLOGY_DETAILS")
-                .addButton("🇬🇧 Edit English (Middle)", "text_edit_PROGRAM_ENGLISH_MIDDLE_DETAILS")
+                .addButton("🧠 Редагувати підліткову психологію", "text_edit_PROGRAM_TEEN_PSYCHOLOGY_DETAILS")
+                .addButton("🇬🇧 Редагувати англійську (середня)", "text_edit_PROGRAM_ENGLISH_MIDDLE_DETAILS")
                 .addRow()
-                .addButton("⬅️ Back", "admin_programs")
+                .addButton("⬅️ Назад", "admin_programs")
                 .build();
 
-        String message = "🧠 *Age 11-15 Programs*\n\nSelect program to edit:";
+        String message = "🧠 *Програми 11-15 років*\n\nОберіть програму для редагування:";
         messageSender.editMessage(chatId, messageId, message, keyboard);
     }
 
     private void editAge15to18Management(long chatId, int messageId) {
         var keyboard = new MenuBuilder()
-                .addButton("🎯 Edit NMT Preparation", "text_edit_PROGRAM_NMT_DETAILS")
+                .addButton("🎯 Редагувати підготовку до НМТ", "text_edit_PROGRAM_NMT_DETAILS")
                 .addRow()
-                .addButton("⬅️ Back", "admin_programs")
+                .addButton("⬅️ Назад", "admin_programs")
                 .build();
 
-        String message = "🎯 *Age 15-18 Programs*\n\nSelect program to edit:";
+        String message = "🎯 *Програми 15-18 років*\n\nОберіть програму для редагування:";
         messageSender.editMessage(chatId, messageId, message, keyboard);
     }
 
     private void editSpecialistsManagement(long chatId, int messageId) {
         var keyboard = new MenuBuilder()
-                .addButton("👩‍⚕️ Edit Psychologist", "text_edit_PROGRAM_PSYCHOLOGIST_DETAILS")
-                .addButton("🗣️ Edit Speech Therapist", "text_edit_PROGRAM_SPEECH_THERAPIST_DETAILS")
+                .addButton("👩‍⚕️ Редагувати психолога", "text_edit_PROGRAM_PSYCHOLOGIST_DETAILS")
+                .addButton("🗣️ Редагувати логопеда", "text_edit_PROGRAM_SPEECH_THERAPIST_DETAILS")
                 .addRow()
-                .addButton("🧠 Edit Neuropedagog", "text_edit_PROGRAM_NEUROPEDAGOG_DETAILS")
+                .addButton("🧠 Редагувати нейропедагога", "text_edit_PROGRAM_NEUROPEDAGOG_DETAILS")
                 .addRow()
-                .addButton("⬅️ Back", "admin_programs")
+                .addButton("⬅️ Назад", "admin_programs")
                 .build();
 
-        String message = "👨‍⚕️ *Specialists Programs*\n\nSelect program to edit:";
+        String message = "👨‍⚕️ *Програми спеціалістів*\n\nОберіть програму для редагування:";
         messageSender.editMessage(chatId, messageId, message, keyboard);
     }
 
     private void editAgeGroupsManagement(long chatId, int messageId) {
         var keyboard = new MenuBuilder()
-                .addButton("👶 Edit Age 4-6 Info", "text_edit_AGE_4_6_MESSAGE")
-                .addButton("🎒 Edit Age 6-10 Info", "text_edit_AGE_6_10_MESSAGE")
+                .addButton("👶 Редагувати інфо 4-6 років", "text_edit_AGE_4_6_MESSAGE")
+                .addButton("🎒 Редагувати інфо 6-10 років", "text_edit_AGE_6_10_MESSAGE")
                 .addRow()
-                .addButton("🧠 Edit Age 11-15 Info", "text_edit_AGE_11_15_MESSAGE")
-                .addButton("🎯 Edit Age 15-18 Info", "text_edit_AGE_15_18_MESSAGE")
+                .addButton("🧠 Редагувати інфо 11-15 років", "text_edit_AGE_11_15_MESSAGE")
+                .addButton("🎯 Редагувати інфо 15-18 років", "text_edit_AGE_15_18_MESSAGE")
                 .addRow()
-                .addButton("👨‍⚕️ Edit Specialists Info", "text_edit_SPECIALISTS_MESSAGE")
+                .addButton("👨‍⚕️ Редагувати інфо спеціалістів", "text_edit_SPECIALISTS_MESSAGE")
                 .addRow()
-                .addButton("⬅️ Back", "admin_content")
+                .addButton("⬅️ Назад", "admin_content")
                 .build();
 
-        String message = "📝 *Age Groups Information*\n\nSelect age group info to edit:";
+        String message = "📝 *Інформація про вікові групи*\n\nОберіть інформацію вікової групи для редагування:";
         messageSender.editMessage(chatId, messageId, message, keyboard);
     }
 
@@ -599,16 +593,16 @@ public class AdminHandler implements MenuHandler {
             textContentService.refreshCache();
 
             var keyboard = new MenuBuilder()
-                    .addButton("⬅️ Back", "admin_main")
+                    .addButton("⬅️ Назад", "admin_main")
                     .build();
 
-            messageSender.editMessage(chatId, messageId, "✅ Content cache refreshed successfully!", keyboard);
+            messageSender.editMessage(chatId, messageId, "✅ Кеш контенту успішно оновлено!", keyboard);
         } catch (Exception e) {
             var keyboard = new MenuBuilder()
-                    .addButton("⬅️ Back", "admin_main")
+                    .addButton("⬅️ Назад", "admin_main")
                     .build();
 
-            messageSender.editMessage(chatId, messageId, "❌ Failed to refresh cache: " + e.getMessage(), keyboard);
+            messageSender.editMessage(chatId, messageId, "❌ Не вдалося оновити кеш: " + e.getMessage(), keyboard);
         }
     }
 
@@ -617,16 +611,16 @@ public class AdminHandler implements MenuHandler {
             textContentService.refreshCache();
 
             var keyboard = new MenuBuilder()
-                    .addButton("⬅️ Back", "admin_main")
+                    .addButton("⬅️ Назад", "admin_main")
                     .build();
 
-            messageSender.sendMessage(chatId, "✅ Content cache refreshed successfully!", keyboard);
+            messageSender.sendMessage(chatId, "✅ Кеш контенту успішно оновлено!", keyboard);
         } catch (Exception e) {
             var keyboard = new MenuBuilder()
-                    .addButton("⬅️ Back", "admin_main")
+                    .addButton("⬅️ Назад", "admin_main")
                     .build();
 
-            messageSender.sendMessage(chatId, "❌ Failed to refresh cache: " + e.getMessage(), keyboard);
+            messageSender.sendMessage(chatId, "❌ Не вдалося оновити кеш: " + e.getMessage(), keyboard);
         }
     }
 
@@ -639,7 +633,7 @@ public class AdminHandler implements MenuHandler {
                 "⏳ Необроблені: " + unprocessedConsultations;
 
         var keyboard = new MenuBuilder()
-                .addButton("⬅️ Back", "admin_main")
+                .addButton("⬅️ Назад", "admin_main")
                 .build();
         messageSender.sendMessage(chatId, stats, keyboard);
     }
@@ -653,7 +647,7 @@ public class AdminHandler implements MenuHandler {
                 "⏳ Необроблені: " + unprocessedConsultations;
 
         var keyboard = new MenuBuilder()
-                .addButton("⬅️ Back", "admin_main")
+                .addButton("⬅️ Назад", "admin_main")
                 .build();
         messageSender.editMessage(chatId, messageId, stats, keyboard);
     }
@@ -662,8 +656,8 @@ public class AdminHandler implements MenuHandler {
     private void showEnrollmentRequests(long chatId) {
         try {
 
-            messageSender.sendMessage(chatId, "📋 Use /requests command to view enrollment requests.",
-                    new MenuBuilder().addButton("⬅️ Back to Admin", "admin_main").build());
+            messageSender.sendMessage(chatId, "📋 Використовуйте команду /requests для перегляду заявок на зарахування.",
+                    new MenuBuilder().addButton("⬅️ Назад до Адмін", "admin_main").build());
         } catch (Exception e) {
             logger.error("Failed to show enrollment requests", e);
         }
@@ -671,8 +665,8 @@ public class AdminHandler implements MenuHandler {
 
     private void showConsultations(long chatId) {
         try {
-            messageSender.sendMessage(chatId, "📞 Use /consultations command to view consultations.",
-                    new MenuBuilder().addButton("⬅️ Back to Admin", "admin_main").build());
+            messageSender.sendMessage(chatId, "📞 Використовуйте команду /consultations для перегляду консультацій.",
+                    new MenuBuilder().addButton("⬅️ Назад до Адмін", "admin_main").build());
         } catch (Exception e) {
             logger.error("Failed to show consultations", e);
         }
