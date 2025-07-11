@@ -51,6 +51,7 @@ public class AdminHandler implements MenuHandler {
         return callbackData.startsWith("admin_") ||
                 callbackData.equals("/admin") ||
                 callbackData.startsWith("text_edit_") ||
+                callbackData.startsWith("admin_vacation") ||
                 callbackData.equals("cancel_edit");
     }
 
@@ -65,6 +66,7 @@ public class AdminHandler implements MenuHandler {
 
         switch (callbackData) {
             case "/admin", "admin_main" -> showAdminMenu(chatId);
+            case "admin_vacation_programs" -> showVacationManagement(chatId);
             case "admin_content" -> showContentManagement(chatId);
             case "admin_programs" -> showProgramsManagement(chatId);
             case "admin_age_groups" -> showAgeGroupsManagement(chatId);
@@ -84,6 +86,40 @@ public class AdminHandler implements MenuHandler {
                 }
             }
         }
+    }
+
+    private void showVacationManagement(long chatId) {
+        var keyboard = new MenuBuilder()
+                .addButton("🍂 Edit Autumn Vacation", "text_edit_PROGRAM_AUTUMN_VACATION_DETAILS")
+                .addButton("❄️ Edit Winter Vacation", "text_edit_PROGRAM_WINTER_VACATION_DETAILS")
+                .addRow()
+                .addButton("🌸 Edit Spring Vacation", "text_edit_PROGRAM_SPRING_VACATION_DETAILS")
+                .addButton("☀️ Edit Summer Vacation", "text_edit_PROGRAM_SUMMER_VACATION_DETAILS")
+                .addRow()
+                .addButton("📝 Edit Vacation Menu", "text_edit_VACATION_MENU_MESSAGE")
+                .addRow()
+                .addButton("⬅️ Back", "admin_programs")
+                .build();
+
+        String message = "🎄 *Vacation Programs Management*\n\nSelect vacation program to edit:";
+        messageSender.sendMessage(chatId, message, keyboard);
+    }
+
+    private void editVacationManagement(long chatId, int messageId) {
+        var keyboard = new MenuBuilder()
+                .addButton("🍂 Edit Autumn Vacation", "text_edit_PROGRAM_AUTUMN_VACATION_DETAILS")
+                .addButton("❄️ Edit Winter Vacation", "text_edit_PROGRAM_WINTER_VACATION_DETAILS")
+                .addRow()
+                .addButton("🌸 Edit Spring Vacation", "text_edit_PROGRAM_SPRING_VACATION_DETAILS")
+                .addButton("☀️ Edit Summer Vacation", "text_edit_PROGRAM_SUMMER_VACATION_DETAILS")
+                .addRow()
+                .addButton("📝 Edit Vacation Menu", "text_edit_VACATION_MENU_MESSAGE")
+                .addRow()
+                .addButton("⬅️ Back", "admin_programs")
+                .build();
+
+        String message = "🎄 *Vacation Programs Management*\n\nSelect vacation program to edit:";
+        messageSender.editMessage(chatId, messageId, message, keyboard);
     }
 
     @Override
@@ -302,18 +338,23 @@ public class AdminHandler implements MenuHandler {
                 .addButton("🧠 Age 11-15 Programs", "admin_age_11_15")
                 .addButton("🎯 Age 15-18 Programs", "admin_age_15_18")
                 .addRow()
+                .addButton("🎄 Vacation Programs", "admin_vacation_programs")  // NEW
                 .addButton("👨‍⚕️ Specialists Programs", "admin_specialists")
                 .addRow()
                 .addButton("⬅️ Back", "admin_main")
                 .build();
 
-        String message = "🎓 *Programs Management*\n\nSelect age group to manage:";
+        String message = "🎓 *Programs Management*\n\nSelect category to manage:";
         messageSender.sendMessage(chatId, message, keyboard);
     }
+
 
     private void showAge4to6Management(long chatId) {
         var keyboard = new MenuBuilder()
                 .addButton("📚 Edit Preschool Program", "text_edit_PROGRAM_PRESCHOOL_DETAILS")
+                .addRow()
+                .addButton("🗣️ Edit Speech Therapist", "text_edit_PROGRAM_SPEECH_THERAPIST_DETAILS")
+                .addButton("🧠 Edit Neuropsychologist", "text_edit_PROGRAM_NEUROPSYCHOLOGIST_PRESCHOOL_DETAILS")  // NEW
                 .addRow()
                 .addButton("⬅️ Back", "admin_programs")
                 .build();
@@ -321,6 +362,7 @@ public class AdminHandler implements MenuHandler {
         String message = "👶 *Age 4-6 Programs*\n\nSelect program to edit:";
         messageSender.sendMessage(chatId, message, keyboard);
     }
+
 
     private void showAge6to10Management(long chatId) {
         var keyboard = new MenuBuilder()
@@ -340,6 +382,7 @@ public class AdminHandler implements MenuHandler {
     private void showAge11to15Management(long chatId) {
         var keyboard = new MenuBuilder()
                 .addButton("🧠 Edit Teen Psychology", "text_edit_PROGRAM_TEEN_PSYCHOLOGY_DETAILS")
+                .addButton("🇬🇧 Edit English (Middle)", "text_edit_PROGRAM_ENGLISH_MIDDLE_DETAILS")  // NEW
                 .addRow()
                 .addButton("⬅️ Back", "admin_programs")
                 .build();
@@ -347,6 +390,7 @@ public class AdminHandler implements MenuHandler {
         String message = "🧠 *Age 11-15 Programs*\n\nSelect program to edit:";
         messageSender.sendMessage(chatId, message, keyboard);
     }
+
 
     private void showAge15to18Management(long chatId) {
         var keyboard = new MenuBuilder()
@@ -364,12 +408,15 @@ public class AdminHandler implements MenuHandler {
                 .addButton("👩‍⚕️ Edit Psychologist", "text_edit_PROGRAM_PSYCHOLOGIST_DETAILS")
                 .addButton("🗣️ Edit Speech Therapist", "text_edit_PROGRAM_SPEECH_THERAPIST_DETAILS")
                 .addRow()
+                .addButton("🧠 Edit Neuropedagog", "text_edit_PROGRAM_NEUROPEDAGOG_DETAILS")  // NEW
+                .addRow()
                 .addButton("⬅️ Back", "admin_programs")
                 .build();
 
         String message = "👨‍⚕️ *Specialists Programs*\n\nSelect program to edit:";
         messageSender.sendMessage(chatId, message, keyboard);
     }
+
 
     private void showAgeGroupsManagement(long chatId) {
         var keyboard = new MenuBuilder()
@@ -611,16 +658,21 @@ public class AdminHandler implements MenuHandler {
     private String getBackButtonForTextKey(String textKey) {
         // Return appropriate back button based on text key
         if (textKey.startsWith("PROGRAM_")) {
-            if (textKey.contains("PRESCHOOL")) return "admin_age_4_6";
+            if (textKey.contains("PRESCHOOL") || textKey.contains("NEUROPSYCHOLOGIST_PRESCHOOL")) return "admin_age_4_6";
             if (textKey.contains("PRIMARY") || textKey.contains("ENGLISH") ||
                     textKey.contains("FINANCIAL") || textKey.contains("CREATIVE")) return "admin_age_6_10";
-            if (textKey.contains("TEEN")) return "admin_age_11_15";
+            if (textKey.contains("TEEN") || textKey.contains("ENGLISH_MIDDLE")) return "admin_age_11_15";
             if (textKey.contains("NMT")) return "admin_age_15_18";
-            if (textKey.contains("PSYCHOLOGIST") || textKey.contains("SPEECH")) return "admin_specialists";
+            if (textKey.contains("PSYCHOLOGIST") || textKey.contains("SPEECH") || textKey.contains("NEUROPEDAGOG")) return "admin_specialists";
+            if (textKey.contains("VACATION") || textKey.contains("AUTUMN") || textKey.contains("WINTER") ||
+                    textKey.contains("SPRING") || textKey.contains("SUMMER")) return "admin_vacation_programs";
             return "admin_programs";
         }
         if (textKey.startsWith("AGE_") || textKey.equals("SPECIALISTS_MESSAGE")) {
             return "admin_age_groups";
+        }
+        if (textKey.equals("VACATION_MENU_MESSAGE")) {
+            return "admin_vacation_programs";
         }
         return "admin_content";
     }

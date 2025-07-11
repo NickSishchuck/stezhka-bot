@@ -121,16 +121,18 @@ public class EnrollmentHandler implements MenuHandler {
         var keyboard = new MenuBuilder()
                 // Age 4-6
                 .addButton("📚 Підготовка до школи", "enrollment_course_preschool")
+                .addButton("🧠 Нейропсихолог (дошкільнята)", "enrollment_course_neuropsychologist_preschool")  // NEW
                 .addRow()
                 // Age 6-10
                 .addButton("🏫 Початкова школа", "enrollment_course_primary")
-                .addButton("🇬🇧 Англійська мова", "enrollment_course_english")
+                .addButton("🇬🇧 Англійська мова (6-10)", "enrollment_course_english")
                 .addRow()
                 .addButton("💰 Фінансова грамотність", "enrollment_course_financial")
                 .addButton("🎨 Творчі гуртки", "enrollment_course_creative")
                 .addRow()
                 // Age 11-15
                 .addButton("🧠 Психолог (підлітки)", "enrollment_course_teen_psychologist")
+                .addButton("🇬🇧 Англійська (11-15)", "enrollment_course_english_middle")  // NEW
                 .addRow()
                 // Age 15-18
                 .addButton("🎯 Підготовка до НМТ", "enrollment_course_nmt")
@@ -138,6 +140,15 @@ public class EnrollmentHandler implements MenuHandler {
                 // Specialists
                 .addButton("👩‍⚕️ Психолог", "enrollment_course_psychologist")
                 .addButton("🗣️ Логопед", "enrollment_course_speech_therapist")
+                .addRow()
+                .addButton("🧠 Нейропедагог", "enrollment_course_neuropedagog")
+                .addRow()
+                // Vacation programs
+                .addButton("🍂 Осінні канікули", "enrollment_course_autumn_vacation")
+                .addButton("❄️ Зимові канікули", "enrollment_course_winter_vacation")
+                .addRow()
+                .addButton("🌸 Весняні канікули", "enrollment_course_spring_vacation")
+                .addButton("☀️ Літні канікули", "enrollment_course_summer_vacation")
                 .addRow()
                 .addButton("❌ Скасувати", "enrollment_cancel")
                 .build();
@@ -444,14 +455,21 @@ public class EnrollmentHandler implements MenuHandler {
     private String getCourseDisplayName(String courseKey) {
         return switch (courseKey) {
             case "preschool" -> "Підготовка до школи";
+            case "neuropsychologist_preschool" -> "Нейропсихолог (дошкільнята)";
             case "primary" -> "Початкова школа";
-            case "english" -> "Англійська мова";
+            case "english" -> "Англійська мова (6-10 років)";
+            case "english_middle" -> "Англійська мова (11-15 років)";
             case "financial" -> "Фінансова грамотність";
             case "creative" -> "Творчі гуртки";
             case "teen_psychologist", "teen_psychology" -> "Психолог (підлітки)";
             case "nmt" -> "Підготовка до НМТ";
             case "psychologist" -> "Психолог";
             case "speech_therapist" -> "Логопед";
+            case "neuropedagog" -> "Нейропедагог";
+            case "autumn_vacation" -> "Осінні канікули";
+            case "winter_vacation" -> "Зимові канікули";
+            case "spring_vacation" -> "Весняні канікули";
+            case "summer_vacation" -> "Літні канікули";
             default -> courseKey;
         };
     }
