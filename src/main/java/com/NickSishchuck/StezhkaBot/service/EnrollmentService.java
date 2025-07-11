@@ -15,17 +15,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.ArrayList;
 
 @Service
 public class EnrollmentService {
 
     private static final Logger logger = LoggerFactory.getLogger(EnrollmentService.class);
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+    private static final int MAX_REQUESTS_PER_USER = 5;
 
     private final EnrollmentRequestRepository enrollmentRepository;
 
     // Temporary storage for enrollment forms in progress
     private final Map<Long, EnrollmentFormState> activeEnrollments = new ConcurrentHashMap<>();
+
+    // Track enrollment requests count per user with timestamps
+    private final Map<Long, List<LocalDateTime>> userRequestCounts = new ConcurrentHashMap<>();
 
     @Value("${bot.admin.user.ids:}")
     private String adminUserIds;
@@ -135,6 +140,9 @@ public class EnrollmentService {
         // Save to database
         EnrollmentRequest saved = enrollmentRepository.save(request);
 
+        // Track this request for rate limiting
+        trackUserRequest(userId);
+
         // Clean up temporary state
         activeEnrollments.remove(userId);
 
@@ -152,13 +160,53 @@ public class EnrollmentService {
     }
 
     /**
-     * Check for recent duplicate enrollment
+     * Check if user has exceeded the enrollment request limit
      */
     public boolean hasRecentEnrollment(Long userId, int hoursAgo) {
-        LocalDateTime since = LocalDateTime.now().minusHours(hoursAgo);
-        Optional<EnrollmentRequest> recent = enrollmentRepository
-                .findFirstByTelegramUserIdAndCreatedAtAfterOrderByCreatedAtDesc(userId, since);
-        return recent.isPresent();
+        // Clean up old entries first
+        cleanupOldUserRequests(userId);
+
+        // Check current count
+        List<LocalDateTime> userRequests = userRequestCounts.getOrDefault(userId, new ArrayList<>());
+
+        if (userRequests.size() >= MAX_REQUESTS_PER_USER) {
+            logger.info("User {} has reached the maximum enrollment requests limit ({}/{})",
+                    userId, userRequests.size(), MAX_REQUESTS_PER_USER);
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Track a user's enrollment request
+     */
+    private void trackUserRequest(Long userId) {
+        userRequestCounts.computeIfAbsent(userId, k -> new ArrayList<>()).add(LocalDateTime.now());
+        logger.debug("Tracked enrollment request for user {}. Current count: {}",
+                userId, userRequestCounts.get(userId).size());
+    }
+
+    /**
+     * Clean up old requests for a specific user (older than 30 minutes)
+     */
+    private void cleanupOldUserRequests(Long userId) {
+        LocalDateTime cutoff = LocalDateTime.now().minusMinutes(30);
+        List<LocalDateTime> userRequests = userRequestCounts.get(userId);
+
+        if (userRequests != null) {
+            int originalSize = userRequests.size();
+            userRequests.removeIf(timestamp -> timestamp.isBefore(cutoff));
+
+            if (userRequests.isEmpty()) {
+                userRequestCounts.remove(userId);
+            }
+
+            if (originalSize != userRequests.size()) {
+                logger.debug("Cleaned up old requests for user {}. Removed: {}, Remaining: {}",
+                        userId, originalSize - userRequests.size(), userRequests.size());
+            }
+        }
     }
 
     /**
@@ -237,13 +285,33 @@ public class EnrollmentService {
     }
 
     /**
-     * Clean up old enrollment states (called periodically)
+     * Clean up old enrollment states and user request counts (called periodically)
      */
     public void cleanupAbandonedEnrollments() {
         LocalDateTime timeout = LocalDateTime.now().minusMinutes(30);
+
+        // Clean up abandoned enrollment forms
         activeEnrollments.entrySet().removeIf(entry ->
                 entry.getValue().getStartedAt().isBefore(timeout)
         );
+
+        // Clean up old user request counts
+        userRequestCounts.entrySet().removeIf(entry -> {
+            List<LocalDateTime> requests = entry.getValue();
+            requests.removeIf(timestamp -> timestamp.isBefore(timeout));
+            return requests.isEmpty();
+        });
+
+        logger.debug("Cleaned up abandoned enrollments and old request counts");
+    }
+
+    /**
+     * Get current request count for user (for debugging/admin purposes)
+     */
+    public int getCurrentRequestCount(Long userId) {
+        cleanupOldUserRequests(userId);
+        List<LocalDateTime> requests = userRequestCounts.get(userId);
+        return requests != null ? requests.size() : 0;
     }
 
     /**

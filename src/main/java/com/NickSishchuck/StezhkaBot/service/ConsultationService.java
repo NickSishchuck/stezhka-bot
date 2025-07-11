@@ -14,17 +14,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.ArrayList;
 
 @Service
 public class ConsultationService {
 
     private static final Logger logger = LoggerFactory.getLogger(ConsultationService.class);
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+    private static final int MAX_REQUESTS_PER_USER = 5;
 
     private final ConsultationRequestRepository consultationRepository;
 
     // Temporary storage for consultation forms in progress
     private final Map<Long, ConsultationFormState> activeConsultations = new ConcurrentHashMap<>();
+
+    // Track consultation requests count per user with timestamps
+    private final Map<Long, List<LocalDateTime>> userRequestCounts = new ConcurrentHashMap<>();
 
     @Autowired
     public ConsultationService(ConsultationRequestRepository consultationRepository) {
@@ -93,6 +98,9 @@ public class ConsultationService {
         // Save to database
         ConsultationRequest saved = consultationRepository.save(request);
 
+        // Track this request for rate limiting
+        trackUserRequest(userId);
+
         // Clean up temporary state
         activeConsultations.remove(userId);
 
@@ -110,13 +118,53 @@ public class ConsultationService {
     }
 
     /**
-     * Check for recent duplicate consultation request
+     * Check if user has exceeded the consultation request limit
      */
     public boolean hasRecentConsultation(Long userId, int hoursAgo) {
-        LocalDateTime since = LocalDateTime.now().minusHours(hoursAgo);
-        Optional<ConsultationRequest> recent = consultationRepository
-                .findFirstByTelegramUserIdAndCreatedAtAfterOrderByCreatedAtDesc(userId, since);
-        return recent.isPresent();
+        // Clean up old entries first
+        cleanupOldUserRequests(userId);
+
+        // Check current count
+        List<LocalDateTime> userRequests = userRequestCounts.getOrDefault(userId, new ArrayList<>());
+
+        if (userRequests.size() >= MAX_REQUESTS_PER_USER) {
+            logger.info("User {} has reached the maximum consultation requests limit ({}/{})",
+                    userId, userRequests.size(), MAX_REQUESTS_PER_USER);
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Track a user's consultation request
+     */
+    private void trackUserRequest(Long userId) {
+        userRequestCounts.computeIfAbsent(userId, k -> new ArrayList<>()).add(LocalDateTime.now());
+        logger.debug("Tracked consultation request for user {}. Current count: {}",
+                userId, userRequestCounts.get(userId).size());
+    }
+
+    /**
+     * Clean up old requests for a specific user (older than 30 minutes)
+     */
+    private void cleanupOldUserRequests(Long userId) {
+        LocalDateTime cutoff = LocalDateTime.now().minusMinutes(30);
+        List<LocalDateTime> userRequests = userRequestCounts.get(userId);
+
+        if (userRequests != null) {
+            int originalSize = userRequests.size();
+            userRequests.removeIf(timestamp -> timestamp.isBefore(cutoff));
+
+            if (userRequests.isEmpty()) {
+                userRequestCounts.remove(userId);
+            }
+
+            if (originalSize != userRequests.size()) {
+                logger.debug("Cleaned up old requests for user {}. Removed: {}, Remaining: {}",
+                        userId, originalSize - userRequests.size(), userRequests.size());
+            }
+        }
     }
 
     /**
@@ -182,13 +230,33 @@ public class ConsultationService {
     }
 
     /**
-     * Clean up old consultation states (called periodically)
+     * Clean up old consultation states and user request counts (called periodically)
      */
     public void cleanupAbandonedConsultations() {
         LocalDateTime timeout = LocalDateTime.now().minusMinutes(30);
+
+        // Clean up abandoned consultation forms
         activeConsultations.entrySet().removeIf(entry ->
                 entry.getValue().getStartedAt().isBefore(timeout)
         );
+
+        // Clean up old user request counts
+        userRequestCounts.entrySet().removeIf(entry -> {
+            List<LocalDateTime> requests = entry.getValue();
+            requests.removeIf(timestamp -> timestamp.isBefore(timeout));
+            return requests.isEmpty();
+        });
+
+        logger.debug("Cleaned up abandoned consultations and old request counts");
+    }
+
+    /**
+     * Get current request count for user (for debugging/admin purposes)
+     */
+    public int getCurrentRequestCount(Long userId) {
+        cleanupOldUserRequests(userId);
+        List<LocalDateTime> requests = userRequestCounts.get(userId);
+        return requests != null ? requests.size() : 0;
     }
 
     /**

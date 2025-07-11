@@ -84,10 +84,11 @@ public class EnrollmentHandler implements MenuHandler {
      * Start enrollment with pre-selected course
      */
     private void startEnrollment(long chatId, int messageId, String programType) {
-        // Check for recent enrollments
-        if (enrollmentService.hasRecentEnrollment(chatId, 2)) {
+        // Check for recent enrollments with new limit system
+        if (enrollmentService.hasRecentEnrollment(chatId, 0)) {
+            int currentCount = enrollmentService.getCurrentRequestCount(chatId);
             messageSender.editMessage(chatId, messageId,
-                    "⚠️ Ви вже подавали заявку нещодавно. Ми зв'яжемося з вами найближчим часом!",
+                    String.format("⚠️ Ви вже подали максимальну кількість заявок (%d/5). Спробуйте пізніше або зачекайте 30 хвилин.", currentCount),
                     new MenuBuilder().addButton("⬅️ Назад", "programs_main").build());
             return;
         }
@@ -102,10 +103,11 @@ public class EnrollmentHandler implements MenuHandler {
      * Start general enrollment from main menu
      */
     private void startGeneralEnrollment(long chatId, int messageId) {
-        // Check for recent enrollments
-        if (enrollmentService.hasRecentEnrollment(chatId, 2)) {
+        // Check for recent enrollments with new limit system
+        if (enrollmentService.hasRecentEnrollment(chatId, 0)) {
+            int currentCount = enrollmentService.getCurrentRequestCount(chatId);
             messageSender.editMessage(chatId, messageId,
-                    "⚠️ Ви вже подавали заявку нещодавно. Ми зв'яжемося з вами найближчим часом!",
+                    String.format("⚠️ Ви вже подали максимальну кількість заявок (%d/5). Спробуйте пізніше або зачекайте 30 хвилин.", currentCount),
                     new MenuBuilder().addButton("⬅️ Назад", "main").build());
             return;
         }

@@ -76,7 +76,6 @@ public class AdminHandler implements MenuHandler {
             case "admin_age_15_18" -> showAge15to18Management(chatId);
             case "admin_specialists" -> showSpecialistsManagement(chatId);
             case "admin_refresh" -> refreshContent(chatId);
-            case "admin_list_all" -> listAllTexts(chatId);
             case "admin_stats" -> showStatistics(chatId);
             case "cancel_edit" -> cancelEditing(chatId);
             default -> {
@@ -142,9 +141,25 @@ public class AdminHandler implements MenuHandler {
             case "admin_age_15_18" -> editAge15to18Management(chatId, messageId);
             case "admin_specialists" -> editSpecialistsManagement(chatId, messageId);
             case "admin_refresh" -> refreshContent(chatId, messageId);
-            case "admin_list_all" -> listAllTexts(chatId);
-            case "admin_stats" -> showStatistics(chatId);
+            case "admin_stats" -> editStatistics(chatId, messageId);
+            case "admin_vacation_programs" -> editVacationManagement(chatId, messageId);
             case "cancel_edit" -> cancelEditing(chatId, messageId);
+            case "/requests" -> {
+                // Redirect to enrollment requests - edit current message to show we're redirecting
+                messageSender.editMessage(chatId, messageId,
+                        "📋 Loading enrollment requests...",
+                        new MenuBuilder().build());
+                // Then show the requests (this will send a new message)
+                showEnrollmentRequests(chatId);
+            }
+            case "/consultations" -> {
+                // Redirect to consultations - edit current message to show we're redirecting
+                messageSender.editMessage(chatId, messageId,
+                        "📞 Loading consultations...",
+                        new MenuBuilder().build());
+                // Then show the consultations (this will send a new message)
+                showConsultations(chatId);
+            }
             default -> {
                 if (callbackData.startsWith("text_edit_")) {
                     String key = callbackData.substring("text_edit_".length());
@@ -279,9 +294,7 @@ public class AdminHandler implements MenuHandler {
                 .addButton("📞 Consultations", "/consultations")
                 .addRow()
                 .addButton("📊 Statistics", "admin_stats")
-                .addRow()
                 .addButton("🔄 Refresh Cache", "admin_refresh")
-                .addButton("📋 List All Texts", "admin_list_all")
                 .addRow()
                 .addButton("⬅️ Back to Main", "main")
                 .build();
@@ -299,9 +312,7 @@ public class AdminHandler implements MenuHandler {
                 .addButton("📞 Consultations", "/consultations")
                 .addRow()
                 .addButton("📊 Statistics", "admin_stats")
-                .addRow()
                 .addButton("🔄 Refresh Cache", "admin_refresh")
-                .addButton("📋 List All Texts", "admin_list_all")
                 .addRow()
                 .addButton("⬅️ Back to Main", "main")
                 .build();
@@ -338,7 +349,7 @@ public class AdminHandler implements MenuHandler {
                 .addButton("🧠 Age 11-15 Programs", "admin_age_11_15")
                 .addButton("🎯 Age 15-18 Programs", "admin_age_15_18")
                 .addRow()
-                .addButton("🎄 Vacation Programs", "admin_vacation_programs")  // NEW
+                .addButton("🎄 Vacation Programs", "admin_vacation_programs")
                 .addButton("👨‍⚕️ Specialists Programs", "admin_specialists")
                 .addRow()
                 .addButton("⬅️ Back", "admin_main")
@@ -348,13 +359,12 @@ public class AdminHandler implements MenuHandler {
         messageSender.sendMessage(chatId, message, keyboard);
     }
 
-
     private void showAge4to6Management(long chatId) {
         var keyboard = new MenuBuilder()
                 .addButton("📚 Edit Preschool Program", "text_edit_PROGRAM_PRESCHOOL_DETAILS")
                 .addRow()
                 .addButton("🗣️ Edit Speech Therapist", "text_edit_PROGRAM_SPEECH_THERAPIST_DETAILS")
-                .addButton("🧠 Edit Neuropsychologist", "text_edit_PROGRAM_NEUROPSYCHOLOGIST_PRESCHOOL_DETAILS")  // NEW
+                .addButton("🧠 Edit Neuropsychologist", "text_edit_PROGRAM_NEUROPSYCHOLOGIST_PRESCHOOL_DETAILS")
                 .addRow()
                 .addButton("⬅️ Back", "admin_programs")
                 .build();
@@ -362,7 +372,6 @@ public class AdminHandler implements MenuHandler {
         String message = "👶 *Age 4-6 Programs*\n\nSelect program to edit:";
         messageSender.sendMessage(chatId, message, keyboard);
     }
-
 
     private void showAge6to10Management(long chatId) {
         var keyboard = new MenuBuilder()
@@ -382,7 +391,7 @@ public class AdminHandler implements MenuHandler {
     private void showAge11to15Management(long chatId) {
         var keyboard = new MenuBuilder()
                 .addButton("🧠 Edit Teen Psychology", "text_edit_PROGRAM_TEEN_PSYCHOLOGY_DETAILS")
-                .addButton("🇬🇧 Edit English (Middle)", "text_edit_PROGRAM_ENGLISH_MIDDLE_DETAILS")  // NEW
+                .addButton("🇬🇧 Edit English (Middle)", "text_edit_PROGRAM_ENGLISH_MIDDLE_DETAILS")
                 .addRow()
                 .addButton("⬅️ Back", "admin_programs")
                 .build();
@@ -390,7 +399,6 @@ public class AdminHandler implements MenuHandler {
         String message = "🧠 *Age 11-15 Programs*\n\nSelect program to edit:";
         messageSender.sendMessage(chatId, message, keyboard);
     }
-
 
     private void showAge15to18Management(long chatId) {
         var keyboard = new MenuBuilder()
@@ -408,7 +416,7 @@ public class AdminHandler implements MenuHandler {
                 .addButton("👩‍⚕️ Edit Psychologist", "text_edit_PROGRAM_PSYCHOLOGIST_DETAILS")
                 .addButton("🗣️ Edit Speech Therapist", "text_edit_PROGRAM_SPEECH_THERAPIST_DETAILS")
                 .addRow()
-                .addButton("🧠 Edit Neuropedagog", "text_edit_PROGRAM_NEUROPEDAGOG_DETAILS")  // NEW
+                .addButton("🧠 Edit Neuropedagog", "text_edit_PROGRAM_NEUROPEDAGOG_DETAILS")
                 .addRow()
                 .addButton("⬅️ Back", "admin_programs")
                 .build();
@@ -416,7 +424,6 @@ public class AdminHandler implements MenuHandler {
         String message = "👨‍⚕️ *Specialists Programs*\n\nSelect program to edit:";
         messageSender.sendMessage(chatId, message, keyboard);
     }
-
 
     private void showAgeGroupsManagement(long chatId) {
         var keyboard = new MenuBuilder()
@@ -494,18 +501,22 @@ public class AdminHandler implements MenuHandler {
                 .addButton("🧠 Age 11-15 Programs", "admin_age_11_15")
                 .addButton("🎯 Age 15-18 Programs", "admin_age_15_18")
                 .addRow()
+                .addButton("🎄 Vacation Programs", "admin_vacation_programs")
                 .addButton("👨‍⚕️ Specialists Programs", "admin_specialists")
                 .addRow()
                 .addButton("⬅️ Back", "admin_main")
                 .build();
 
-        String message = "🎓 *Programs Management*\n\nSelect age group to manage:";
+        String message = "🎓 *Programs Management*\n\nSelect category to manage:";
         messageSender.editMessage(chatId, messageId, message, keyboard);
     }
 
     private void editAge4to6Management(long chatId, int messageId) {
         var keyboard = new MenuBuilder()
                 .addButton("📚 Edit Preschool Program", "text_edit_PROGRAM_PRESCHOOL_DETAILS")
+                .addRow()
+                .addButton("🗣️ Edit Speech Therapist", "text_edit_PROGRAM_SPEECH_THERAPIST_DETAILS")
+                .addButton("🧠 Edit Neuropsychologist", "text_edit_PROGRAM_NEUROPSYCHOLOGIST_PRESCHOOL_DETAILS")
                 .addRow()
                 .addButton("⬅️ Back", "admin_programs")
                 .build();
@@ -532,6 +543,7 @@ public class AdminHandler implements MenuHandler {
     private void editAge11to15Management(long chatId, int messageId) {
         var keyboard = new MenuBuilder()
                 .addButton("🧠 Edit Teen Psychology", "text_edit_PROGRAM_TEEN_PSYCHOLOGY_DETAILS")
+                .addButton("🇬🇧 Edit English (Middle)", "text_edit_PROGRAM_ENGLISH_MIDDLE_DETAILS")
                 .addRow()
                 .addButton("⬅️ Back", "admin_programs")
                 .build();
@@ -555,6 +567,8 @@ public class AdminHandler implements MenuHandler {
         var keyboard = new MenuBuilder()
                 .addButton("👩‍⚕️ Edit Psychologist", "text_edit_PROGRAM_PSYCHOLOGIST_DETAILS")
                 .addButton("🗣️ Edit Speech Therapist", "text_edit_PROGRAM_SPEECH_THERAPIST_DETAILS")
+                .addRow()
+                .addButton("🧠 Edit Neuropedagog", "text_edit_PROGRAM_NEUROPEDAGOG_DETAILS")
                 .addRow()
                 .addButton("⬅️ Back", "admin_programs")
                 .build();
@@ -616,31 +630,6 @@ public class AdminHandler implements MenuHandler {
         }
     }
 
-    private void listAllTexts(long chatId) {
-        Map<String, String> allTexts = textContentService.getAllTexts();
-
-        StringBuilder message = new StringBuilder("📋 All Text Entries:\n\n");
-
-        allTexts.entrySet().stream()
-                .limit(10)
-                .forEach(entry -> {
-                    String preview = entry.getValue().length() > 50
-                            ? entry.getValue().substring(0, 50) + "..."
-                            : entry.getValue();
-                    message.append(String.format("• %s: %s\n", entry.getKey(), preview));
-                });
-
-        if (allTexts.size() > 10) {
-            message.append(String.format("\n... and %d more entries", allTexts.size() - 10));
-        }
-
-        var keyboard = new MenuBuilder()
-                .addButton("⬅️ Back", "admin_main")
-                .build();
-
-        messageSender.sendPlainMessage(chatId, message.toString(), keyboard);
-    }
-
     private void showStatistics(long chatId) {
         String enrollmentStats = enrollmentService.getStatistics();
         long unprocessedConsultations = consultationService.getUnprocessedConsultationsCount();
@@ -653,6 +642,40 @@ public class AdminHandler implements MenuHandler {
                 .addButton("⬅️ Back", "admin_main")
                 .build();
         messageSender.sendMessage(chatId, stats, keyboard);
+    }
+
+    private void editStatistics(long chatId, int messageId) {
+        String enrollmentStats = enrollmentService.getStatistics();
+        long unprocessedConsultations = consultationService.getUnprocessedConsultationsCount();
+
+        String stats = enrollmentStats + "\n\n" +
+                "📞 *Консультації*\n" +
+                "⏳ Необроблені: " + unprocessedConsultations;
+
+        var keyboard = new MenuBuilder()
+                .addButton("⬅️ Back", "admin_main")
+                .build();
+        messageSender.editMessage(chatId, messageId, stats, keyboard);
+    }
+
+    // Helper methods for redirecting to other handlers
+    private void showEnrollmentRequests(long chatId) {
+        try {
+
+            messageSender.sendMessage(chatId, "📋 Use /requests command to view enrollment requests.",
+                    new MenuBuilder().addButton("⬅️ Back to Admin", "admin_main").build());
+        } catch (Exception e) {
+            logger.error("Failed to show enrollment requests", e);
+        }
+    }
+
+    private void showConsultations(long chatId) {
+        try {
+            messageSender.sendMessage(chatId, "📞 Use /consultations command to view consultations.",
+                    new MenuBuilder().addButton("⬅️ Back to Admin", "admin_main").build());
+        } catch (Exception e) {
+            logger.error("Failed to show consultations", e);
+        }
     }
 
     private String getBackButtonForTextKey(String textKey) {

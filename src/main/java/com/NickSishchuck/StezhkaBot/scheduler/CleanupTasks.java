@@ -29,13 +29,14 @@ public class CleanupTasks {
     }
 
     /**
-     * Clean up abandoned enrollment forms every 30 minutes
+     * Clean up abandoned enrollment forms and user request counts every 30 minutes
+     * This also handles the rate limiting cleanup (requests older than 30 minutes)
      */
     @Scheduled(fixedDelay = 1800000) // 30 minutes in milliseconds
     public void cleanupAbandonedEnrollments() {
-        logger.debug("Starting cleanup of abandoned enrollments");
+        logger.debug("Starting cleanup of abandoned enrollments and request counts");
         enrollmentService.cleanupAbandonedEnrollments();
-        logger.debug("Completed cleanup of abandoned enrollments");
+        logger.debug("Completed cleanup of abandoned enrollments and request counts");
     }
 
     /**
@@ -49,12 +50,25 @@ public class CleanupTasks {
     }
 
     /**
-     * Clean up abandoned consultation forms every 30 minutes
+     * Clean up abandoned consultation forms and user request counts every 30 minutes
+     * This also handles the rate limiting cleanup (requests older than 30 minutes)
      */
     @Scheduled(fixedDelay = 1800000) // 30 minutes in milliseconds
     public void cleanupAbandonedConsultations() {
-        logger.debug("Starting cleanup of abandoned consultations");
+        logger.debug("Starting cleanup of abandoned consultations and request counts");
         consultationService.cleanupAbandonedConsultations();
-        logger.debug("Completed cleanup of abandoned consultations");
+        logger.debug("Completed cleanup of abandoned consultations and request counts");
+    }
+
+    /**
+     * Additional cleanup every 15 minutes for more aggressive rate limit cleanup
+     * This ensures that users don't have to wait too long for their request count to reset
+     */
+    @Scheduled(fixedDelay = 900000)
+    public void cleanupRequestCounts() {
+        logger.debug("Starting additional cleanup of request counts");
+        enrollmentService.cleanupAbandonedEnrollments();
+        consultationService.cleanupAbandonedConsultations();
+        logger.debug("Completed additional cleanup of request counts");
     }
 }

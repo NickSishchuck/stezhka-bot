@@ -77,10 +77,11 @@ public class ConsultationHandler implements MenuHandler {
      * Start consultation request
      */
     private void startConsultation(long chatId, int messageId) {
-        // Check for recent consultations
-        if (consultationService.hasRecentConsultation(chatId, 2)) {
+        // Check for recent consultations with new limit system
+        if (consultationService.hasRecentConsultation(chatId, 0)) {
+            int currentCount = consultationService.getCurrentRequestCount(chatId);
             messageSender.editMessage(chatId, messageId,
-                    "⚠️ Ви вже подавали заявку на консультацію нещодавно. Ми зв'яжемося з вами найближчим часом!",
+                    String.format("⚠️ Ви вже подали максимальну кількість заявок (%d/5). Спробуйте пізніше або зачекайте 30 хвилин.", currentCount),
                     new MenuBuilder().addButton("⬅️ Назад", "main").build());
             return;
         }
